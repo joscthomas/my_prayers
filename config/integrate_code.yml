@@ -1,0 +1,77 @@
+'''
+- 1. `git status` – Make sure your current area is clean.  
+- 2. `git pull` – Get the latest version from the remote. This saves merging issues later.  
+- 3. Edit your files and make your changes. Remember to run your linter and do [unit tests](https://realpython.com/python-testing/)!  
+- 4. `git status` – Find all files that are changed. Make sure to watch untracked files too!  
+- 5. ` git add [files]` – Add the changed files to the staging area.  
+- 6. `git commit -m "message"` – Make your new commit.  
+- 7. `git push origin [branch-name]` – Push your changes up to the remote.
+'''
+
+'''
+Is this a batch file? Some kind of command file. Where does it run? What is the language?
+
+(state of git: there are modified files in staging)  
+
+This job is a continuous integration pipeline that does stuff
+upon pushes of source code to the master branch of the repository. 
+
+Step 1
+    Analyze source code 
+    Run all python *.py files thru the linter
+    output: error report
+    decision: stop or proceed
+    (and other source code analysis tools)
+Step 2
+    Run test suite (pytest)
+    set up a virtual environment
+    output: pass or fail with errors
+    decision: stop or proceed
+Step 3
+    Run code coverage analysis https://about.codecov.io/?ref=hackernoon.com
+Step 4
+    Check data types (mypy)
+Step 5
+    Build a package ?? (pypa?)
+Step 6
+    Publish package ?? (pypi?)
+Step 7
+    send notification of results
+Step 8
+    Build and publish documentation
+Step 9
+    Check in code to repo
+
+
+- pipeline job  
+    - Is this a batch file? Some kind of command file. Where does it run? What is the language?  
+    - (state of git: there are modified files in staging)  
+    - This job is a continuous integration pipeline that does stuff  
+      upon pushes of source code to the master branch of the repository.  
+    - Step 1  
+        - Analyze source code  
+            - Run all python *.py files thru the linter  
+            - output: error report  
+            - decision: stop or proceed  
+            - (and other source code analysis tools)  
+        - Step 2  
+            - Run test suite (pytest)  
+            - set up a virtual environment  
+            - output: pass or fail with errors  
+            - decision: stop or proceed  
+        - Step 3  
+            - Run code coverage analysis https://about.codecov.io/?ref=hackernoon.com  
+        - Step 4  
+            - Check data types (mypy)  
+        - Step 5  
+            - Build a package ?? (pypa?)  
+        - Step 6  
+            - Publish package ?? (pypi?)  
+        - Step 7  
+            - send notification of results  
+        - Step 8  
+            - Build and publish documentation  
+        - Step 9  
+            - Check in code to repo  
+
+'''
