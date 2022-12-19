@@ -20,6 +20,7 @@ import logging
 # Third party imports
 
 # Local application imports
+import db
 import welcome
 import honor_God
 import my_concerns
