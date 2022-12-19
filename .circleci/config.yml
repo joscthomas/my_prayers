@@ -56,3 +56,5 @@ jobs:
             coverage run -m pytest
             coverage report
             mypy src
+      # Step 4: build documentation
+      

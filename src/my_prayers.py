@@ -14,7 +14,12 @@ Modeled after YouVersion's Pray Now function.
 7. Present a closing message.
 '''
 
-# import modules
+# Standard library imports
+import logging
+
+# Third party imports
+
+# Local application imports
 import welcome
 import honor_God
 import my_concerns
@@ -25,10 +30,23 @@ import Gods_will
 
 # define main function
 def main():
+    """The main or top level module of the My Prayers application.
+
+    Call the following primary functions for this application.
+    """
+
+    # logging set up
+    logging.basicConfig(filename='app.log', filemode='w', 
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
+        level=logging.DEBUG)
+    logging.debug('Logging level is DEBUG')
+
+    db.setup()
     welcome.display_msg()   # module_filename.function
     honor_God.display_msg()
     my_concerns.manage_prayers()
     Gods_will.display_msg()
+    db.close()
 
 
 if __name__ == "__main__":
