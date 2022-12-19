@@ -13,7 +13,7 @@ Purpose: main module for testing using pytest
 # from local_module import local_class
 # from local_package import local_function
 # from package(directory).module import function
-from ..my_prayers_pkg import welcome, honor_God, my_concerns, Gods_will
+from ..src import welcome, honor_God, my_concerns, Gods_will
 
 
 def test_main():
