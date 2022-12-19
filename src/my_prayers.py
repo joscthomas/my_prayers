@@ -48,42 +48,42 @@ def main():
 
 
 def welcome(app_debug):
-    if app_debug==True:
+    if app_debug is True:
         logging.debug('Function : welcome')
 
     return "welcome"
 
 
 def honor_God(app_debug):
-    if app_debug==True:
+    if app_debug is True:
         logging.debug('Function : honor_God')
 
     return "honor_God"
 
 
 def manage_prayers(app_debug):
-    if app_debug==True:
+    if app_debug is True:
         logging.debug('Function : manage_prayers')
 
     return "manage_prayers"
 
 
 def Gods_will(app_debug):
-    if app_debug==True:
+    if app_debug is True:
         logging.debug('Function : Gods_will')    
 
     return "Gods_will"
 
 
 def db_setup(app_debug):
-    if app_debug==True:
+    if app_debug is True:
         logging.debug('Function : db.setup')
 
     return 'db_setup'
 
 
 def db_close(app_debug):
-    if app_debug==True:
+    if app_debug is True:
         logging.debug('Function : db.close')
 
     return 'db_close'
