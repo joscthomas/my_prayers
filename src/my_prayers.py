@@ -33,11 +33,11 @@ def main():
 
     # logging set up
     logging.basicConfig(
-        filename = 'app.log', filemode = 'w',
-        format = '%(asctime)s : %(name)s : %(levelname)s : %(message)s',
-        level = logging.DEBUG, force = True)
+        filename='app.log', filemode='w',
+        format='%(asctime)s : %(name)s : %(levelname)s : %(message)s',
+        level=logging.DEBUG, force = True)
     logging.debug('Logging level is DEBUG')
-    app_debug=True
+    app_debug = True
 
     db_setup(app_debug)
     welcome(app_debug)
