@@ -21,15 +21,15 @@ def test_main():
 
     # logging set up
     logging.basicConfig(
-        filename='app_test.log', filemode='w',
-        format='%(asctime)s : %(name)s : %(levelname)s : %(message)s',
-        level=logging.DEBUG, force=True)
+        filename = 'app_test.log', filemode = 'w',
+        format = '%(asctime)s : %(name)s : %(levelname)s : %(message)s',
+        level = logging.DEBUG, force = True)
     logging.debug('Logging level is TEST DEBUG')
-    app_debug=True
+    app_debug = True
 
     # module_filename.function
     assert my_prayers.db_setup(app_debug) == 'db_setup'
-    assert my_prayers.welcome(app_debug) == 'welcome'   
+    assert my_prayers.welcome(app_debug) == 'welcome'
     assert my_prayers.honor_God(app_debug) == 'honor_God'
     assert my_prayers.manage_prayers(app_debug) == 'manage_prayers'
     assert my_prayers.Gods_will(app_debug) == 'Gods_will'

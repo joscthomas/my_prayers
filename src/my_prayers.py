@@ -33,9 +33,9 @@ def main():
 
     # logging set up
     logging.basicConfig(
-        filename='app.log', filemode='w',
-        format='%(asctime)s : %(name)s : %(levelname)s : %(message)s',
-        level=logging.DEBUG, force=True)
+        filename = 'app.log', filemode = 'w',
+        format = '%(asctime)s : %(name)s : %(levelname)s : %(message)s',
+        level = logging.DEBUG, force = True)
     logging.debug('Logging level is DEBUG')
     app_debug=True
 
@@ -70,7 +70,7 @@ def manage_prayers(app_debug):
 
 def Gods_will(app_debug):
     if app_debug is True:
-        logging.debug('Function : Gods_will')    
+        logging.debug('Function : Gods_will')
 
     return "Gods_will"
 
