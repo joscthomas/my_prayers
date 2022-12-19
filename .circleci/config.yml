@@ -55,5 +55,4 @@ jobs:
             flake8 --exclude=venv* --statistics -v
             coverage run -m pytest
             coverage report
-            mypy
-      #            pytest -v --cov=calculator (maybe later)
+            mypy src
