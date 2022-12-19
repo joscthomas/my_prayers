@@ -23,7 +23,7 @@ def test_main():
     logging.basicConfig(
         filename='app_test.log', filemode='w',
         format='%(asctime)s : %(name)s : %(levelname)s : %(message)s',
-        level=logging.DEBUG, force = True)
+        level=logging.DEBUG, force=True)
     logging.debug('Logging level is TEST DEBUG')
     app_debug = True
 
