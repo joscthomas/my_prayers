@@ -20,16 +20,11 @@ import logging
 # Third party imports
 
 # Local application imports
-import db
-import welcome
-import honor_God
-import my_concerns
-import Gods_will
 
 # define functions
 
 
-# define main function
+# define the main function
 def main():
     """The main or top level module of the My Prayers application.
 
@@ -39,17 +34,60 @@ def main():
     # logging set up
     logging.basicConfig(
         filename='app.log', filemode='w',
-        format='%(asctime)s - %(name)s -%(levelname)s - %(message)s',
-        level=logging.DEBUG)
+        format='%(asctime)s : %(name)s : %(levelname)s : %(message)s',
+        level=logging.DEBUG, force=True)
     logging.debug('Logging level is DEBUG')
+    app_debug=True
 
-    db.setup()
-    welcome.display_msg()   # module_filename.function
-    honor_God.display_msg()
-    my_concerns.manage_prayers()
-    Gods_will.display_msg()
-    db.close()
+    db_setup(app_debug)
+    welcome(app_debug)
+    honor_God(app_debug)
+    manage_prayers(app_debug)
+    Gods_will(app_debug)
+    db_close(app_debug)
 
 
-if __name__ == "__main__":
+def welcome(app_debug):
+    if app_debug==True:
+        logging.debug('Function : welcome')
+
+    return "welcome"
+
+
+def honor_God(app_debug):
+    if app_debug==True:
+        logging.debug('Function : honor_God')
+
+    return "honor_God"
+
+
+def manage_prayers(app_debug):
+    if app_debug==True:
+        logging.debug('Function : manage_prayers')
+
+    return "manage_prayers"
+
+
+def Gods_will(app_debug):
+    if app_debug==True:
+        logging.debug('Function : Gods_will')    
+
+    return "Gods_will"
+
+
+def db_setup(app_debug):
+    if app_debug==True:
+        logging.debug('Function : db.setup')
+
+    return 'db_setup'
+
+
+def db_close(app_debug):
+    if app_debug==True:
+        logging.debug('Function : db.close')
+
+    return 'db_close'
+
+
+if __name__ == '__main__':
     main()
