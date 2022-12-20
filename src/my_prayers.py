@@ -46,7 +46,7 @@ def main():
     # main line
     db_connection = db_setup(app_debug)
     # temporary null op so db_connection is referenced
-    if db_connection == false:
+    if db_connection == False:
         pass
 
     welcome(app_debug)
@@ -132,7 +132,7 @@ def db_setup(app_debug):
         logging.info('SQLite database version %s', sqlite3.version)
         logging.debug('db_connection : %s', db_connection)
         logging.debug('db file exists : %s', os.path.isfile(db_file))
-        logging.debug('setup_db_tables : %s', setup_db_tables)        
+        logging.debug('setup_db_tables : %s', setup_db_tables)
 
     if setup_db_tables is not True:     # new database file, create tables
         create_db_tables(app_debug)
@@ -148,7 +148,7 @@ def create_db_tables(app_debug):
         true turns on debug logging
     *returns*
     db_connection : obj
-        name of database object if creation successful, null if not 
+        name of database object if creation successful, null if not
     '''
 
     if app_debug is True:
