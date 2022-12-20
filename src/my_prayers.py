@@ -45,6 +45,10 @@ def main():
 
     # main line
     db_connection = db_setup(app_debug)
+    # temporary null op so db_connection is referenced
+    if db_connection == false:
+        pass
+
     welcome(app_debug)
     honor_God(app_debug)
     manage_prayers(app_debug)
@@ -88,7 +92,7 @@ def db_setup(app_debug):
         true turns on debug logging
     *returns*
     db_connection : obj
-        name of database object if creation successful, null if not 
+        name of database object if creation successful, null if not
     '''
 
     if app_debug is True:
@@ -103,9 +107,9 @@ def db_setup(app_debug):
     # create a connection to a SQLite database for a file
     # in the current project (maybe install?) directory
     # TODO collect db_file for app setup parameter
-    db_file = 'db/mp.db'    # name of database file
-    db_connection = None    # initialize
-    setup_db_tables = False # initialize
+    db_file = 'db/mp.db'        # name of database file
+    db_connection = None        # initialize
+    setup_db_tables = False     # initialize
 
     if app_debug is True:
         logging.debug('db file exists : %s', os.path.isfile(db_file))
@@ -130,9 +134,8 @@ def db_setup(app_debug):
         logging.debug('db file exists : %s', os.path.isfile(db_file))
         logging.debug('setup_db_tables : %s', setup_db_tables)        
 
-    if setup_db_tables == True: # new database file, create tables
+    if setup_db_tables is not True:     # new database file, create tables
         create_db_tables(app_debug)
-
 
     return db_connection
 

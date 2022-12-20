@@ -31,7 +31,7 @@ def test_main():
 #    assert my_prayers.db_setup(app_debug) == 'db_setup'
     # TODO the following seems superflous since the error checking is 
     # in the function; how do I test?
-    db_object=my_prayers.db_setup(app_debug)
+    db_object = my_prayers.db_setup(app_debug)
     assert db_object is not None
     logging.debug('db_object : %s', db_object)
 
