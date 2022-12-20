@@ -46,7 +46,7 @@ def main():
     # main line
     db_connection = db_setup(app_debug)
     # temporary null op so db_connection is referenced
-    if db_connection == False:
+    if db_connection is False:
         pass
 
     welcome(app_debug)

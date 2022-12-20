@@ -29,7 +29,7 @@ def test_main():
 
     # module_filename.function
 #    assert my_prayers.db_setup(app_debug) == 'db_setup'
-    # TODO the following seems superflous since the error checking is 
+    # TODO the following seems superflous since the error checking is
     # in the function; how do I test?
     db_object = my_prayers.db_setup(app_debug)
     assert db_object is not None
