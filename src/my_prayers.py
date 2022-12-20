@@ -135,12 +135,12 @@ def db_setup(app_debug):
         logging.debug('setup_db_tables : %s', setup_db_tables)
 
     if setup_db_tables is not True:     # new database file, create tables
-        create_db_tables(app_debug)
+        create_db_tables(app_debug, db_connection)
 
     return db_connection
 
 
-def create_db_tables(app_debug):
+def create_db_tables(app_debug, db_connection):
     ''' Execute SQL statements to create datbase tables for the app
 
     *input arguments*
@@ -149,10 +149,47 @@ def create_db_tables(app_debug):
     *returns*
     db_connection : obj
         name of database object if creation successful, null if not
+    Database design diagram:
+        http://bit.ly/3FyXESA
     '''
 
     if app_debug is True:
         logging.debug('Function : create_db_tables')
+
+    # All primary keys are unique generated integers.
+    #   On an INSERT, if the ROWID or INTEGER PRIMARY KEY column is not
+    #   explicitly given a value, then it will be filled automatically
+    #   with an unused integer, usually one more than the largest ROWID
+    #   currently in use.
+    # Store dates as ISO8601 strings ("YYYY-MM-DD HH:MM:SS.SSS").
+    sql_string = "CREATE TABLE IF NOT EXISTS prayer (\
+                    prayer_id integer PRIMARY KEY,\
+                    prayer_text text NOT NULL,\
+                    create_date text NOT NULL,\
+                    answer_text text,\
+                    answer_date text\
+                    category_id integer NOT NULL\
+                    display_count integer\
+                    );"
+
+    sql_string = "CREATE TABLE IF NOT EXISTS category (\
+                    category_id integer PRIMARY KEY,\
+                    category_name text NOT NULL,\
+                    );"
+
+    # bible_verse is boolean, value of 0 or 1
+    sql_string = "CREATE TABLE IF NOT EXISTS message (\
+                    message_id integer PRIMARY KEY,\
+                    message_text text NOT NULL,\
+                    bible_verse integer NOT NULL\
+                    display_count integer\
+                    );"
+
+    sql_string = "CREATE TABLE IF NOT EXISTS message_type (\
+                    message_type_id integer PRIMARY KEY,\
+                    message_type_name text NOT NULL,\
+                    );"
+
 
     return
 
