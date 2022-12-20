@@ -28,7 +28,13 @@ def test_main():
     app_debug = True
 
     # module_filename.function
-    assert my_prayers.db_setup(app_debug) == 'db_setup'
+#    assert my_prayers.db_setup(app_debug) == 'db_setup'
+    # TODO the following seems superflous since the error checking is 
+    # in the function; how do I test?
+    db_object=my_prayers.db_setup(app_debug)
+    assert db_object is not None
+    logging.debug('db_object : %s', db_object)
+
     assert my_prayers.welcome(app_debug) == 'welcome'
     assert my_prayers.honor_God(app_debug) == 'honor_God'
     assert my_prayers.manage_prayers(app_debug) == 'manage_prayers'
