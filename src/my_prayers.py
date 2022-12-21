@@ -130,7 +130,7 @@ def db_setup(app_debug):
         logging.debug('db file exists : %s', os.path.isfile(db_file))
         logging.debug('setup_db_tables : %s', setup_db_tables)
 
-    if setup_db_tables is not True:     # new database file, create tables
+    if setup_db_tables is True:     # new database file, create tables
         create_db_tables(app_debug, db_connection)
 
     return db_connection
@@ -140,17 +140,11 @@ def create_db_tables(app_debug, db_connection):
     ''' Execute SQL statements to create datbase tables for the app
 
     *input arguments*
-    app_debug : bool
-        true turns on debug logging
+        app_debug : bool ; true turns on debug logging
     *returns*
-    db_connection : obj
-        name of database object if creation successful, null if not
-    Database design diagram:
-        http://bit.ly/3FyXESA
+        db_connection : obj ; database object if successful, null if not
+    Database design diagram : http://bit.ly/3FyXESA
     '''
-
-    import sqlite3
-    from sqlite3 import Error
 
     if app_debug is True:
         logging.debug('Function : create_db_tables')
@@ -168,8 +162,8 @@ prayer_id integer PRIMARY KEY,\
 prayer_text text NOT NULL,\
 create_date text NOT NULL,\
 answer_text text,\
-answer_date text\
-category_id integer NOT NULL\
+answer_date text,\
+category_id integer NOT NULL,\
 display_count integer\
 );'
     logging.debug('prayer : %s', sql_string)
@@ -177,26 +171,26 @@ display_count integer\
 
     # create table : category
     sql_string = "CREATE TABLE IF NOT EXISTS category (\
-                    category_id integer PRIMARY KEY,\
-                    category_name text NOT NULL,\
-                    );"
+category_id integer PRIMARY KEY,\
+category_name text NOT NULL\
+);"
     create_table(db_connection, sql_string)
 
     # bible_verse is boolean, value of 0 or 1
     # create table : message
     sql_string = "CREATE TABLE IF NOT EXISTS message (\
-                    message_id integer PRIMARY KEY,\
-                    message_text text NOT NULL,\
-                    bible_verse integer NOT NULL\
-                    display_count integer\
-                    );"
+message_id integer PRIMARY KEY,\
+message_text text NOT NULL,\
+bible_verse integer NOT NULL,\
+display_count integer\
+);"
     create_table(db_connection, sql_string)
 
     # create table : message_type
     sql_string = "CREATE TABLE IF NOT EXISTS message_type (\
-                    message_type_id integer PRIMARY KEY,\
-                    message_type_name text NOT NULL,\
-                    );"
+message_type_id integer PRIMARY KEY,\
+message_type_name text NOT NULL\
+);"
     create_table(db_connection, sql_string)
 
     return
@@ -205,10 +199,16 @@ display_count integer\
 def create_table(db_connection, create_table_sql):
     """ create a table from the create_table_sql statement
 
-    :param db_connection: database connection object
-    :param create_table_sql: a CREATE TABLE sql statement
-    :return:
+    *input arguments*
+        db_connection : obj ; database connection object
+        create_table_sql : str ; a CREATE TABLE sql statement
+    *return*
+        null
     """
+
+    import sqlite3
+    from sqlite3 import Error
+
     try:
         c = db_connection.cursor()
         c.execute(create_table_sql)
