@@ -190,7 +190,6 @@ def create_db_tables(app_debug, db_connection):
                     message_type_name text NOT NULL,\
                     );"
 
-
     return
 
 
