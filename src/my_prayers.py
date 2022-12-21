@@ -99,7 +99,7 @@ def db_setup():
 
     # Using SQLite DBMS
     import sqlite3
-    from sqlite3 import Error
+ #   from sqlite3 import Error
 
     # create a connection to a SQLite database for a file
     # in the current project (maybe install?) directory
@@ -224,7 +224,7 @@ def create_table(db_connection, create_table_sql):
         null
     """
 
- #   import sqlite3
+    # import sqlite3
     from sqlite3 import Error
 
     try:
@@ -236,7 +236,7 @@ def create_table(db_connection, create_table_sql):
     return
 
 
-def db_close (db_connection):
+def db_close(db_connection):
     if APP_DEBUG is True:
         logging.debug('Function : db_close')
 

@@ -66,7 +66,7 @@ def check_db(db_connection):
 
     table_name = 'prayer'
     table_cols = 'prayer_text, create_date, category_id'
-    col_values = '"test prayer 1", "' + str(date.today()) +'", 1'
+    col_values = '"test prayer 1", "' + str(date.today()) + '", 1'
     check_table(db_connection, table_name, table_cols, col_values)
 
     table_name = 'message_type'
@@ -128,7 +128,7 @@ def check_table(db_connection, table_name, table_cols, col_values):
 
     # 2. Insert a row
     sql_string = ('INSERT INTO ' + table_name + ' (' + table_cols +
-                 ') VALUES (' + col_values + ')')
+                  ') VALUES (' + col_values + ')')
     logging.debug('sql_string=%s', sql_string)
     db_connection.execute(sql_string)
     db_connection.commit()
