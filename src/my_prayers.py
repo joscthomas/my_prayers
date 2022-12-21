@@ -99,7 +99,7 @@ def db_setup():
 
     # Using SQLite DBMS
     import sqlite3
- #   from sqlite3 import Error
+#   from sqlite3 import Error
 
     # create a connection to a SQLite database for a file
     # in the current project (maybe install?) directory
