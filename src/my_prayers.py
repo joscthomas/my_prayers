@@ -121,11 +121,7 @@ def db_setup(app_debug):
     try:
         db_connection = sqlite3.connect(db_file)
     except Error as e:
-        logging.error('SQLite error upon database creation ', e)
-#        print(e)
-#    finally:
-#        if conn:
-#            conn.close()
+        logging.error('SQLite error upon database creation %s', e)
 
     if app_debug is True:
         logging.info('Created SQLite database file: %s', db_file)
@@ -153,6 +149,9 @@ def create_db_tables(app_debug, db_connection):
         http://bit.ly/3FyXESA
     '''
 
+    import sqlite3
+    from sqlite3 import Error
+
     if app_debug is True:
         logging.debug('Function : create_db_tables')
 
@@ -162,33 +161,59 @@ def create_db_tables(app_debug, db_connection):
     #   with an unused integer, usually one more than the largest ROWID
     #   currently in use.
     # Store dates as ISO8601 strings ("YYYY-MM-DD HH:MM:SS.SSS").
-    sql_string = "CREATE TABLE IF NOT EXISTS prayer (\
-                    prayer_id integer PRIMARY KEY,\
-                    prayer_text text NOT NULL,\
-                    create_date text NOT NULL,\
-                    answer_text text,\
-                    answer_date text\
-                    category_id integer NOT NULL\
-                    display_count integer\
-                    );"
+    #
+    # create table : prayer
+    sql_string = 'CREATE TABLE IF NOT EXISTS prayer (\
+prayer_id integer PRIMARY KEY,\
+prayer_text text NOT NULL,\
+create_date text NOT NULL,\
+answer_text text,\
+answer_date text\
+category_id integer NOT NULL\
+display_count integer\
+);'
+    logging.debug('prayer : %s', sql_string)
+    create_table(db_connection, sql_string)
 
+    # create table : category
     sql_string = "CREATE TABLE IF NOT EXISTS category (\
                     category_id integer PRIMARY KEY,\
                     category_name text NOT NULL,\
                     );"
+    create_table(db_connection, sql_string)
 
     # bible_verse is boolean, value of 0 or 1
+    # create table : message
     sql_string = "CREATE TABLE IF NOT EXISTS message (\
                     message_id integer PRIMARY KEY,\
                     message_text text NOT NULL,\
                     bible_verse integer NOT NULL\
                     display_count integer\
                     );"
+    create_table(db_connection, sql_string)
 
+    # create table : message_type
     sql_string = "CREATE TABLE IF NOT EXISTS message_type (\
                     message_type_id integer PRIMARY KEY,\
                     message_type_name text NOT NULL,\
                     );"
+    create_table(db_connection, sql_string)
+
+    return
+
+
+def create_table(db_connection, create_table_sql):
+    """ create a table from the create_table_sql statement
+
+    :param db_connection: database connection object
+    :param create_table_sql: a CREATE TABLE sql statement
+    :return:
+    """
+    try:
+        c = db_connection.cursor()
+        c.execute(create_table_sql)
+    except Error as e:
+        logging.error('SQLite error upon table creation %s', e)
 
     return
 

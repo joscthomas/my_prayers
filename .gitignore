@@ -3,3 +3,4 @@ env
 venv
 app.log
 app_test.log
+db/mp.db
