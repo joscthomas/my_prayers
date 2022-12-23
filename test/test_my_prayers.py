@@ -27,7 +27,6 @@ def test_main():
     logging.debug('Logging level is TEST DEBUG')
 
     # module_filename.function
-#    assert my_prayers.db_setup(app_debug) == 'db_setup'
     # TODO the following seems superflous since the error checking is
     # in the function; how do I test?
     db_connection = my_prayers.db_setup()
@@ -69,14 +68,9 @@ def check_db(db_connection):
     col_values = '"test prayer 1", "' + str(date.today()) + '", 1'
     check_table(db_connection, table_name, table_cols, col_values)
 
-    table_name = 'message_type'
-    table_cols = 'message_type_name'
-    col_values = '"test message_type 1"'
-    check_table(db_connection, table_name, table_cols, col_values)
-
     table_name = 'message'
-    table_cols = 'message_text, message_type_id, bible_verse'
-    col_values = '"test message 1", 1, 0'
+    table_cols = 'header, seq, pgraph, message'
+    col_values = '"WELCOME", 1, 1,"test message 1"'
     check_table(db_connection, table_name, table_cols, col_values)
 
     # Delete each table in turn
@@ -89,9 +83,6 @@ def check_db(db_connection):
 
     # Delete message first because of FK constraint on message_type
     table_name = 'message'
-    del_tables(db_connection, table_name)
-
-    table_name = 'message_type'
     del_tables(db_connection, table_name)
 
     return

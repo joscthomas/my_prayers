@@ -99,7 +99,7 @@ def db_setup():
 
     # Using SQLite DBMS
     import sqlite3
-#   from sqlite3 import Error
+    # from sqlite3 import Error
 
     # create a connection to a SQLite database file
     # TODO in the current project (maybe install?) directory
@@ -167,7 +167,14 @@ def create_db_tables(db_connection):
     if APP_DEBUG is True:
         logging.debug('Function : create_db_tables')
 
-    # Store dates as ISO8601 strings ("YYYY-MM-DD HH:MM:SS.SSS").
+    # prayer_id : unique identifer set by sqlite
+    # prayer_text : a prayer request
+    # create_date : date a prayer was created
+    # answer_text : the answer to the prayer request
+    # answer_date : date a prayer was answered
+    # category_id : points at the category name for the prayer
+    # display_count : number of times a prayer presented
+    # (dates stored as ISO8601 strings : "YYYY-MM-DD HH:MM:SS.SSS"
     sql_string = ('''CREATE TABLE IF NOT EXISTS prayer
         (prayer_id integer PRIMARY KEY,
         prayer_text text NOT NULL,
@@ -183,27 +190,36 @@ def create_db_tables(db_connection):
         logging.debug('prayer : %s', sql_string)
     create_table(db_connection, sql_string)
 
+    # category_id : unique identifier set by sqlite
+    # category_name : a category of a prayer request
     sql_string = ('''CREATE TABLE IF NOT EXISTS category
         (category_id integer PRIMARY KEY,
         category_name text NOT NULL
         );''')
     create_table(db_connection, sql_string)
 
-    # bible_verse is boolean, value of 0 or 1
+    # message_id : unique identifier set by sqlite
+    # header : a label at the top of the page
+    # seq : one up sequence number identifying a header component
+    # pgraph : one up sequence number identifying a paragraph
+    # verse : bible reference book, chapter, verse or null (not a verse)
+    # message : the text of the message
     sql_string = ('''CREATE TABLE IF NOT EXISTS message
-        (message_id integer PRIMARY KEY,
-        message_text text NOT NULL,
-        bible_verse integer NOT NULL,
-        message_type_id integer NOT NULL,
-        display_count integer,
-        FOREIGN KEY (message_type_id)
-        REFERENCES message_type (message_type_id)
+        (message_id integer,
+        header text,
+        seq integer,
+        pgraph integer,
+        verse text,
+        message text NOT NULL,
+        PRIMARY KEY (message_id, header, seq, pgraph)
         );''')
     create_table(db_connection, sql_string)
 
-    sql_string = ('''CREATE TABLE IF NOT EXISTS message_type
-        (message_type_id integer PRIMARY KEY,
-        message_type_name text NOT NULL
+    # status_id : unique identifier assigned by sqlite
+    # message_count : number of times for a prayer session
+    sql_string = ('''CREATE TABLE IF NOT EXISTS status
+        (status_id integer PRIMARY KEY,
+        message_count integer NOT NULL
         );''')
     create_table(db_connection, sql_string)
 
