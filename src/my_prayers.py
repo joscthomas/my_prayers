@@ -101,8 +101,8 @@ def db_setup():
     import sqlite3
 #   from sqlite3 import Error
 
-    # create a connection to a SQLite database for a file
-    # in the current project (maybe install?) directory
+    # create a connection to a SQLite database file
+    # TODO in the current project (maybe install?) directory
     # TODO collect db_file for app setup parameter
     db_file = 'db/mp.db'        # name of database file
 
@@ -112,7 +112,8 @@ def db_setup():
     if APP_DEBUG is True:
         logging.debug('db file exists : %s', os.path.isfile(db_file))
 
-    # test for a new database file; if present, setup database tables
+    # test for a new database file;
+    # only setup database file with tables if they do not already exist
     if os.path.isfile(db_file) is False:
         setup_db_tables = True
 
@@ -157,58 +158,53 @@ def create_db_tables(db_connection):
     ''' Execute SQL statements to create datbase tables for the app
 
     *input arguments*
-    *returns*
         db_connection : obj ; database object if successful, null if not
+    *returns*
+        null
     Database design diagram : http://bit.ly/3FyXESA
     '''
 
     if APP_DEBUG is True:
         logging.debug('Function : create_db_tables')
 
-    # All primary keys are unique generated integers.
-    #   On an INSERT, if the ROWID or INTEGER PRIMARY KEY column is not
-    #   explicitly given a value, then it will be filled automatically
-    #   with an unused integer, usually one more than the largest ROWID
-    #   currently in use.
     # Store dates as ISO8601 strings ("YYYY-MM-DD HH:MM:SS.SSS").
-    #
-    sql_string = 'CREATE TABLE IF NOT EXISTS prayer\
- (prayer_id integer PRIMARY KEY,\
- prayer_text text NOT NULL,\
- create_date text NOT NULL,\
- answer_text text,\
- answer_date text,\
- category_id integer,\
- display_count integer,\
- FOREIGN KEY (category_id)\
- REFERENCES category (category_id)\
-);'
+    sql_string = ('''CREATE TABLE IF NOT EXISTS prayer
+        (prayer_id integer PRIMARY KEY,
+        prayer_text text NOT NULL,
+        create_date text NOT NULL,
+        answer_text text,
+        answer_date text,
+        category_id integer,
+        display_count integer,
+        FOREIGN KEY (category_id)
+        REFERENCES category (category_id)
+        );''')
     if APP_DEBUG is True:
         logging.debug('prayer : %s', sql_string)
     create_table(db_connection, sql_string)
 
-    sql_string = "CREATE TABLE IF NOT EXISTS category\
- (category_id integer PRIMARY KEY,\
- category_name text NOT NULL\
-);"
+    sql_string = ('''CREATE TABLE IF NOT EXISTS category
+        (category_id integer PRIMARY KEY,
+        category_name text NOT NULL
+        );''')
     create_table(db_connection, sql_string)
 
     # bible_verse is boolean, value of 0 or 1
-    sql_string = "CREATE TABLE IF NOT EXISTS message\
- (message_id integer PRIMARY KEY,\
- message_text text NOT NULL,\
- bible_verse integer NOT NULL,\
- message_type_id integer,\
- display_count integer,\
- FOREIGN KEY (message_type_id)\
- REFERENCES message_type (message_type_id)\
-);"
+    sql_string = ('''CREATE TABLE IF NOT EXISTS message
+        (message_id integer PRIMARY KEY,
+        message_text text NOT NULL,
+        bible_verse integer NOT NULL,
+        message_type_id integer NOT NULL,
+        display_count integer,
+        FOREIGN KEY (message_type_id)
+        REFERENCES message_type (message_type_id)
+        );''')
     create_table(db_connection, sql_string)
 
-    sql_string = "CREATE TABLE IF NOT EXISTS message_type (\
-message_type_id integer PRIMARY KEY,\
-message_type_name text NOT NULL\
-);"
+    sql_string = ('''CREATE TABLE IF NOT EXISTS message_type
+        (message_type_id integer PRIMARY KEY,
+        message_type_name text NOT NULL
+        );''')
     create_table(db_connection, sql_string)
 
     return
