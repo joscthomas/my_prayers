@@ -235,7 +235,7 @@ def create_table(db_connection, create_table_sql):
     """
 
     # import sqlite3
-    from sqlite3 import Error
+    # from sqlite3 import Error
 
     try:
         c = db_connection.cursor()
