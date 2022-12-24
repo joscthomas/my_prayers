@@ -22,6 +22,8 @@ import logging
 import os
 
 # Third party imports
+import sqlite3
+from sqlite3 import Error
 
 # Local application imports
 
@@ -98,7 +100,7 @@ def db_setup():
         logging.debug('Function : db_setup')
 
     # Using SQLite DBMS
-    import sqlite3
+    # import sqlite3
     # from sqlite3 import Error
 
     # create a connection to a SQLite database file
