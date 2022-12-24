@@ -99,10 +99,6 @@ def db_setup():
     if APP_DEBUG is True:
         logging.debug('Function : db_setup')
 
-    # Using SQLite DBMS
-    # import sqlite3
-    # from sqlite3 import Error
-
     # create a connection to a SQLite database file
     # TODO in the current project (maybe install?) directory
     # TODO collect db_file for app setup parameter
@@ -143,8 +139,8 @@ def create_connection(db_file):
         conn : obj ; Connection object or None
     '''
 
-    import sqlite3
-    from sqlite3 import Error
+    # import sqlite3
+    # from sqlite3 import Error
 
     db_connection = None    # initialize
 
