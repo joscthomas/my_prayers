@@ -104,7 +104,6 @@ def db_setup():
     # TODO collect db_file for app setup parameter
     db_file = 'db/mp.db'        # name of database file
 
-    db_connection = None        # initialize
     setup_db_tables = False     # initialize
 
     if APP_DEBUG is True:
@@ -138,9 +137,6 @@ def create_connection(db_file):
     *return*
         conn : obj ; Connection object or None
     '''
-
-    # import sqlite3
-    # from sqlite3 import Error
 
     db_connection = None    # initialize
 
@@ -233,9 +229,6 @@ def create_table(db_connection, create_table_sql):
     *return*
         null
     """
-
-    # import sqlite3
-    # from sqlite3 import Error
 
     try:
         c = db_connection.cursor()
