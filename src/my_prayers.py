@@ -160,7 +160,7 @@ def create_db_tables(db_connection):
 
     if APP_DEBUG is True:
         logging.debug('Function : create_db_tables; db_connection : %s',
-                    db_connection)
+                      db_connection)
 
     # prayer_id : unique identifer set by sqlite
     # prayer_text : a prayer request
