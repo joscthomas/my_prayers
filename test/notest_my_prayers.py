@@ -1,11 +1,17 @@
 '''
 Purpose: module for testing using pytest
+
+To run this test from the command shell
+1. cd \\Users\\jcthomas\\Documents\\JCT Documents\\Python\\my_prayers_project
+2. pytest
 '''
 
 # Standard library imports
 # import sys
 # import pytest
 import logging
+from datetime import date
+
 
 # Third party imports
 
@@ -24,7 +30,7 @@ def test_main():
         filename='app_test.log', filemode='w',
         format='%(asctime)s : %(name)s : %(levelname)s : %(message)s',
         level=logging.DEBUG, force=True)
-    logging.debug('Logging level is TEST DEBUG')
+    logging.debug('test_my_prayers : Logging level is TEST DEBUG')
 
     # module_filename.function
     # TODO the following seems superflous since the error checking is
@@ -37,8 +43,7 @@ def test_main():
 
     assert my_prayers.welcome(db_connection) == 'welcome'
     assert my_prayers.honor_God(db_connection) == 'honor_God'
-    assert my_prayers.manage_prayers(db_connection)\
-        == 'manage_prayers'
+    assert my_prayers.manage_prayers(db_connection) == 'manage_prayers'
     assert my_prayers.Gods_will(db_connection) == 'Gods_will'
     assert my_prayers.db_close(db_connection) == 'db_close'
 
@@ -49,15 +54,16 @@ def check_db(db_connection):
     ''' Test that the database has been successfully created
 
     Test each table by:
-        1. Performing some basic operations on each table
-        2. Delete each table
+        1. Set up columns and values for each table
+        2. Call function that performs some basic operations on each table
+        3. Delete each table
     '''
-
-    from datetime import date
 
     logging.debug('module : check_db : db_connection : %s', db_connection)
 
     # check each table in turn
+    # (see create_db_tables in my_prayers.py for table definition)
+
     table_name = 'category'
     table_cols = 'category_name'
     col_values = '"test category 1"'
@@ -69,21 +75,21 @@ def check_db(db_connection):
     check_table(db_connection, table_name, table_cols, col_values)
 
     table_name = 'message'
-    table_cols = 'header, seq, pgraph, message'
-    col_values = '"WELCOME", 1, 1,"test message 1"'
+    table_cols = 'message_id, component, pgraph, header, verse, message_text'
+    col_values = '"2022-12-04", 1, 1, "WELCOME", "","test message 1"'
     check_table(db_connection, table_name, table_cols, col_values)
 
-    # Delete each table in turn
+    # Delete all rows for each table in turn
     # Delete prayer first because of FK constraint on category
     table_name = 'prayer'
-    del_tables(db_connection, table_name)
+    del_table_rows(db_connection, table_name)
 
     table_name = 'category'
-    del_tables(db_connection, table_name)
+    del_table_rows(db_connection, table_name)
 
-    # Delete message first because of FK constraint on message_type
+    # Delete message first
     table_name = 'message'
-    del_tables(db_connection, table_name)
+    del_table_rows(db_connection, table_name)
 
     return
 
@@ -105,8 +111,8 @@ def check_table(db_connection, table_name, table_cols, col_values):
         null
     '''
 
-    logging.debug('check_table : table_name=%s : table_cols=%s :\
- col_values=%s', table_name, table_cols, col_values)
+    logging.debug(('check_table : table_name=%s : table_cols=%s\
+        : col_values=%s'), table_name, table_cols, col_values)
 
     cursor = db_connection.cursor()
     # 1. Check that no rows exist
@@ -136,7 +142,7 @@ def check_table(db_connection, table_name, table_cols, col_values):
     return
 
 
-def del_tables(db_connection, table_name):
+def del_table_rows(db_connection, table_name):
     ''' Delete all rows in a table
 
     *input args*

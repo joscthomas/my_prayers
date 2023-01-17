@@ -159,7 +159,8 @@ def create_db_tables(db_connection):
     '''
 
     if APP_DEBUG is True:
-        logging.debug('Function : create_db_tables')
+        logging.debug('Function : create_db_tables; db_connection : %s',
+            db_connection)
 
     # prayer_id : unique identifer set by sqlite
     # prayer_text : a prayer request
@@ -190,31 +191,47 @@ def create_db_tables(db_connection):
         (category_id integer PRIMARY KEY,
         category_name text NOT NULL
         );''')
+    if APP_DEBUG is True:
+        logging.debug('category : %s', sql_string)
     create_table(db_connection, sql_string)
 
-    # message_id : unique identifier set by sqlite
-    # header : a label at the top of the page
-    # seq : one up sequence number identifying a header component
-    # pgraph : one up sequence number identifying a paragraph
-    # verse : bible reference book, chapter, verse or null (not a verse)
-    # message : the text of the message
+    # message_id : unique identifier (a date string)
+    # component : one up number identifying a message component
+    #       (starts with 1)
+    # pgraph : one up number identifying a paragraph for a message component
+    #       (starts with 1)
+    # header : a label for the message component
+    #       (not null only in seq 1 pgraph 1)
+    # verse : bible reference book, chapter, verse (or null : not a verse)
+    # message_text : the text of the message
     sql_string = ('''CREATE TABLE IF NOT EXISTS message
-        (message_id integer,
-        header text,
-        seq integer,
+        (message_id text,
+        component integer,
         pgraph integer,
+        header text,
         verse text,
-        message text NOT NULL,
-        PRIMARY KEY (message_id, header, seq, pgraph)
+        message_text text NOT NULL,
+        PRIMARY KEY (message_id, component, pgraph)
         );''')
+    if APP_DEBUG is True:
+        logging.debug('message : %s', sql_string)
     create_table(db_connection, sql_string)
 
-    # status_id : unique identifier assigned by sqlite
-    # message_count : number of times for a prayer session
-    sql_string = ('''CREATE TABLE IF NOT EXISTS status
-        (status_id integer PRIMARY KEY,
-        message_count integer NOT NULL
+    # parms table has a single row and contains app parameters
+    # parm_id : unique identifier assigned by sqlite
+    # actor_name : name of person using app
+    # first_date : the date the actor first used the app
+    # last_date : the date the actor last used the app
+    # access_count : the number of prayer sessions for actor
+    sql_string = ('''CREATE TABLE IF NOT EXISTS parameters
+        (parm_id integer PRIMARY KEY,
+        actor_name text,
+        first_date text,
+        last_date text,
+        access_count integer
         );''')
+    if APP_DEBUG is True:
+        logging.debug('parameters : %s', sql_string)
     create_table(db_connection, sql_string)
 
     return
@@ -229,6 +246,9 @@ def create_table(db_connection, create_table_sql):
     *return*
         null
     """
+
+    if APP_DEBUG is True:
+        logging.debug('Function : create_table')
 
     try:
         c = db_connection.cursor()

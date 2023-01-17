@@ -1,4 +1,4 @@
-This app manages a list of prayers. It's user interface provides the ability 
+This app manages a list of prayers. Its user interface provides the ability 
 to:
 
 Here is the flow upon running the app: 
@@ -24,9 +24,15 @@ Here is the flow upon running the app:
         - End
 
 Directory structure
-    - src : contains Python source code for project
-    - test : contains Python source code for automated testing of the 
-    main project
+    - mp_project : parent directory of my_prayers
+        - src : contains Python source code for project
+        - test : contains Python source code for automated testing of the main project
+        - db : contains SQLite database
+
+Configuration management
+    - git status 
+    - git add filename.py
+    - git push
 
 
 Main module : my_prayers.py
