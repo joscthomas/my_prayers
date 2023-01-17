@@ -1,11 +1,12 @@
-from sqlalchemy import and_, create_engine, delete
+from sqlalchemy import create_engine # and_, delete
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql import asc, desc, func
+from sqlalchemy.sql import func # asc, desc,
 
 import logging
 
 from ..src.model import Category, Prayer, Message, Parameters
 from ..src import my_prayers
+
 
 def test_app():
     ''' Test the model-view-controller my_prayer app
@@ -51,18 +52,26 @@ def test_app():
     # test the model by retrieving and getting data
     categories = get_categories(session)
     for row in categories:
-        logging.debug(f'Category: {row.category_name}, total : {row.total_categories}')
+        logging.debug((
+            f'Category: {row.category_name}, total : {row.total_categories}'
+            )
+        )
 
     prayers = get_prayers(session)
     for row in prayers:
-        logging.debug(f'Prayer: {row.prayer_text}, total : {row.total_prayers}')
+        logging.debug((
+            f'Prayer: {row.prayer_text}, total : {row.total_prayers}'
+            )
+        )
 
     messages = get_messages(session)
     for row in messages:
-        logging.debug(f'Message: {row.message_text}, total : {row.total_messages}')
+        logging.debug((
+            f'Message: {row.message_text}, total : {row.total_messages}'
+            )
+        )
 
     # delete the data
-    # x = session.query(Category).get(2)
     result = session.query(Category).one()
     session.delete(result)
     result = session.query(Prayer).one()
@@ -81,31 +90,13 @@ def populate_db(session):
     category = Category(category_name='test category 1')
     session.add(category)
 
-    '''
-    sql_string = ('INSERT INTO category (category_name) ' +
-        'VALUES ("test category 1")')
-    db_connection.execute(sql_string)
-    db_connection.commit()
-    '''
     prayer = Prayer(prayer_text='test prayer 1', create_date='2022-01-15',
         category_id=1)
     session.add(prayer)
 
-    '''
-    sql_string = ('INSERT INTO prayer (prayer_text, create_date, category_id) ' +
-        'VALUES ("test prayer 1", "2022-12-24", 1)')
-    db_connection.execute(sql_string)
-    db_connection.commit()
-    '''
     message = Message(message_id='2022-12-04', component=1, pgraph=1,
         header='WELCOME', message_text='test message 1')
     session.add(message)
-    '''
-    sql_string = ('INSERT INTO message (header, seq, pgraph, message_text) ' +
-        'VALUES ("WELCOME", 1, 1,"test message 1")')
-    db_connection.execute(sql_string)
-    db_connection.commit()
-    '''
 
     # Commit to the database
     session.commit()

@@ -32,6 +32,7 @@ Directory structure
 Configuration management
     - git status 
     - git add filename.py
+    - git commit -a
     - git push
 
 
