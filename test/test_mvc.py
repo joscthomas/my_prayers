@@ -91,11 +91,11 @@ def populate_db(session):
     session.add(category)
 
     prayer = Prayer(prayer_text='test prayer 1', create_date='2022-01-15',
-            category_id=1)
+                    category_id=1)
     session.add(prayer)
 
     message = Message(message_id='2022-12-04', component=1, pgraph=1,
-            header='WELCOME', message_text='test message 1')
+                    header='WELCOME', message_text='test message 1')
     session.add(message)
 
     # Commit to the database

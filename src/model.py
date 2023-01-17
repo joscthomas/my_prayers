@@ -1,7 +1,7 @@
 # code modeled after:
 # https://realpython.com/python-sqlite-sqlalchemy/#using-sqlite-to-persist-data # noqa
 #
-from sqlalchemy import Column, Integer, String, ForeignKey # Table
+from sqlalchemy import Column, Integer, String, ForeignKey  # Table
 from sqlalchemy.orm import relationship, backref
 # from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
