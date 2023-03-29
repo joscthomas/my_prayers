@@ -133,7 +133,7 @@ def get_messages(session):
             Message.message_text,
             func.count(Message.message_text).label("total_messages")
             )
-        .order_by(Message.message_id, Message.component, Message.pgraph)
+        .order_by(Message.message_id, Message.component, Message.pgraph_seq)
         .all()
         )
 
