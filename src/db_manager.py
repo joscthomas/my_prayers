@@ -20,14 +20,19 @@ class InitDatabase:
     df_all_prayers: a pandas dataframe containing all prayers
     """
 
+    # for storing and retrieving a pandas dataframe
+    # https://stackoverflow.com/questions/17098654/how-to-reversibly-store-and-load-a-pandas-dataframe-to-from-disk
+
     def __init__(self):  # initialize the database
         #
         # create pandas dataframe from panel data CSV
+        # columns: panel_set,panel_seq,pgraph_seq,header,verse,text
         self.df_all_panels = pd.read_csv('panels.csv')
         # self.df_all_panels = self.df_all_panels.set_index(['panel_set', 'panel', 'pgraph']).sort_index()
         # self.df_all_panels.sort_index(axis=1, inplace=True)
-        # todo create pandas dataframe from prayer data CSV
-        self.df_all_prayers = []
+        # create pandas datafram from prayer data CSV
+        # columns: prayer,create_date,answer_date,category,up_vote
+        self.df_all_prayers = pd.read_csv('prayers.csv')
 
 
 def create_panel_objects_from_database(db):
@@ -112,23 +117,37 @@ def get_panel_set_id():
     return "20221204"
 
 
-class DbPrayer:
+# class DbPrayer:
+# columns: prayer,create_date,answer_date,category,up_vote
 
-    def __init__(self):
-        pass
+# def __init__(self):
+#     pass
 
-    def get_prayers(self, prayer_list):
-        # algorithm to select a set of prayers from the database
-        pass
+def read_prayer_set(self, prayer_list):
+    # algorithm to select a set of prayers from the database
+    pass
 
-    def write_prayer(self):
-        # write a prayer to the database
-        pass
 
-    def update_prayer(self):
-        # update a prayer in the database
-        pass
+def create_prayer(db, prayer):
+    # write a prayer to the database
+    data2 = {
+        "age": [55, 40],
+        "qualified": [True, False]
+    }
+    new_prayer = pd.dataframe({'prayer': prayer.prayer,
+                               'create_date': prayer.create_date,
+                               'answer_date': prayer.answer_date,
+                               'category': prayer.category,
+                               })
+    db.df_all_prayers = pd.concat(db.df_all_prayers,new_prayer)
+    x = True
 
-    def delete_prayer(self):
-        # delete a prayer in the database
-        pass
+
+def update_prayer(self):
+    # update a prayer in the database
+    pass
+
+
+def delete_prayer(self):
+    # delete a prayer in the database
+    pass

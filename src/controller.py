@@ -10,7 +10,8 @@ MVC message sequence diagram http://bit.ly/3xj8hFa
 """
 
 from mpo_model import ControlTable, ControlTableRow
-from db_manager import InitDatabase, create_panel_objects_from_database, DbPrayer
+from db_manager import InitDatabase, create_panel_objects_from_database, \
+    create_prayer, read_prayer_set
 from ui_manager import Display
 
 class App():
@@ -45,6 +46,7 @@ class App():
     def main_loop(self):
         """
         The main loop of the application.
+
         Display the first panel then
             use the ControlTable to drive what happens next
         """
@@ -53,19 +55,21 @@ class App():
         for x in self.panel_set.panel_list:
             header = self.uim.display_panel(x)
             for y in self.control_table.row_list:
-                # find the ControlTableRow where
+                # find the ControlTableRow that matches the Panel that
+                # just displayed to determine what happens next
                 if y.current_state == header:
                     if y.action_module == 'continue_prompt':
                         self.uim.continue_prompt()
                     elif y.action_module == 'get_new_prayers':
-                        get_new_prayers()
+                        self.get_new_prayer()
                     else:
                         assert False, f'unexpected y.action_module ' \
                                       f'value: {y.action_module}'
+                    # now another action
                     if y.to_state_module == 'display_panel':
                         self.uim.display_panel(x)
                     elif y.to_state_module == 'get_old_prayers':
-                        get_old_prayers()
+                        self.get_old_prayers()
                     elif y.to_state_module == 'quit_app':
                         quit_app()
                     else:
@@ -73,27 +77,26 @@ class App():
                                       f'value: {y.to_state_module}'
 
 
-def get_new_prayers():
-    print('get_new_prayers')
-    # get a prayer from the ui manager
-    # ui manager returns a NewPrayer object
-    # send the NewPrayer object to db manager to write it to the database
+    def get_new_prayer(self):
+        """
+        Get a prayer from the ui manager.
 
-    new_prayer_list = []
-    another_prayer = True
-    while another_prayer:
-        prayer = input('Enter prayer request (or return if done)\n').strip()
-        if len(prayer) > 0:
-            category = input('Category?\n').strip()
-            # save the new prayer
-            new_prayer = Prayer(prayer, category)
-            new_prayer_list.append(new_prayer)
-        else:
-            another_prayer = False
+        UI manager returns a NewPrayer object.
+        Send the NewPrayer object to db manager to write it to the database.
+        """
+
+        # call the ui manager to get a Prayer object
+        # call the db manager to write the Prayer to the database
+        another_prayer = True
+        while another_prayer:
+            prayer, another_prayer = self.uim.ui_get_new_prayer()
+            create_prayer(self.dbm, prayer)
 
 
-def get_old_prayers():
-    print('get_old_prayers')
+
+
+    def get_old_prayers():
+        print('get_old_prayers')
 
 
 def quit_app():

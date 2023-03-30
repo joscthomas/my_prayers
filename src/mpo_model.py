@@ -1,17 +1,24 @@
-# model for the My Prayer objects
-# this model is the interface between:
-#   1. the controller and the user interface manager
-#   2. the controller and the database manager
+"""
+Class model for the My Prayer objects.
 
-import datetime
+This model is the interface between:
+    1. the controller and the user interface manager
+    2. the controller and the database manager
+"""
+
+from datetime import datetime
 
 
 class Prayer:
 
     def __init__(self, prayer, category):
         self.prayer = prayer
+        timestamp = datetime.now()
+        self.create_date = timestamp
+        self.answer_date = None
         self.category = category
-        self.date = datetime.datetime.now()
+        self.up_vote = None
+    # columns: prayer,create_date,answer_date,category,up_vote
 
 
     def save_new_prayers(self, prayer_list):
@@ -44,9 +51,11 @@ class PrayerList:
 #   to the user for a prayer session
 
 class PanelSet:
-    # a list of panels to display for a PrayerSession; a panel is one screen
-    #
-    #   panel_list: a list of Panel objects
+    """
+    A list of panels to display for a PrayerSession; a panel is one screen.
+
+    panel_list: a list of Panel objects
+    """
 
     def __init__(self, panel_list):
         self.panel_list = panel_list
@@ -54,7 +63,7 @@ class PanelSet:
 
 class Panel:
     """
-    A list of panel paragraphs (PanelPgraph objects).
+    Data for display on the user interface. The parent of PanelPgraph.
 
     A Panel is the presentation of one screen with its composition
        of paragraphs
@@ -71,12 +80,14 @@ class Panel:
 
 
 class PanelPgraph:
-    # a paragraph of text for a Panel to display
-    #
-    # panel: sequence number of the paragraph within the Panel
-    # header: the heading (short text) for the panel; indicates the PanelType
-    # text: a text line to display (long text)
-    # verse: the Bible book chapter:verse reference (optiona)
+    """
+    A paragraph of text for a Panel to display.
+
+    panel: sequence number of the paragraph within the Panel
+    header: the heading (short text) for the panel; indicates the PanelType
+    text: a text line to display (long text)
+    verse: the Bible book chapter:verse reference (optiona)
+    """
 
     def __init__(self, pgraph_seq, header, verse, text):
         self.pgraph_seq = pgraph_seq
@@ -85,8 +96,11 @@ class PanelPgraph:
         self.text = text
 
 class ControlTable:
-    #
-    # row_list: a list of ControlTableRow objects
+    """
+    Parent of ControlTable Rows.
+
+    row_list: a list of ControlTableRow objects
+    """
 
     def __init__(self, row_list):
         self.row_list = row_list
@@ -95,13 +109,14 @@ class ControlTable:
 class ControlTableRow:
     """
     current_state: the current state of the ui
-        (header displayed or module completed)
+        (PanelPgraph header displayed, or module completed)
     action_module: the module to call to get user input for the current
        state (default: display_panel; otherwise special function module)
     to_state_module: the module to call to process user input
        and move to the next state
     to_state_panel: the header panel to pass to display_panel
     """
+
     def __init__(self, current_state, action_module,
                  to_state_module, to_state_panel):
         self.current_state = current_state
