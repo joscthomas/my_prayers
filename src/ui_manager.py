@@ -49,7 +49,7 @@ class Display:
 
     def ui_get_new_prayer(self):
         new_prayer: object = None
-        another_prayer = True
+        another_prayer: bool = True
         prayer = input('Enter prayer request (or return if done)\n').strip()
         if len(prayer) > 0:
             category = input('Category?\n').strip()

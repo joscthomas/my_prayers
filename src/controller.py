@@ -40,6 +40,7 @@ class App():
         self.control_table:object = None  # ControlTable object
         self.panel_set, self.control_table = \
             create_panel_objects_from_database(self.dbm)
+        # the main loop of the app
         self.main_loop()
 
 
@@ -90,7 +91,8 @@ class App():
         another_prayer = True
         while another_prayer:
             prayer, another_prayer = self.uim.ui_get_new_prayer()
-            create_prayer(self.dbm, prayer)
+            if another_prayer:
+                create_prayer(self.dbm, prayer)
 
 
 

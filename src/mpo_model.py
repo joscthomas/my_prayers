@@ -6,15 +6,16 @@ This model is the interface between:
     2. the controller and the database manager
 """
 
-from datetime import datetime
+from datetime import date
 
 
 class Prayer:
 
     def __init__(self, prayer, category):
         self.prayer = prayer
-        timestamp = datetime.now()
-        self.create_date = timestamp
+        today = date.today()
+        today = today.strftime("%d-%b-%Y")
+        self.create_date = today
         self.answer_date = None
         self.category = category
         self.up_vote = None

@@ -130,16 +130,13 @@ def read_prayer_set(self, prayer_list):
 
 def create_prayer(db, prayer):
     # write a prayer to the database
-    data2 = {
-        "age": [55, 40],
-        "qualified": [True, False]
-    }
-    new_prayer = pd.dataframe({'prayer': prayer.prayer,
-                               'create_date': prayer.create_date,
-                               'answer_date': prayer.answer_date,
-                               'category': prayer.category,
-                               })
-    db.df_all_prayers = pd.concat(db.df_all_prayers,new_prayer)
+    i = len(db.df_all_prayers)
+    db.df_all_prayers.loc[i] = \
+        [prayer.prayer,
+         prayer.create_date,
+         prayer.answer_date,
+         prayer.category,
+         None]
     x = True
 
 
