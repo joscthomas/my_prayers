@@ -51,14 +51,17 @@ class PanelSet:
     def __init__(self, panel_list):
         self.panel_list = panel_list
 
+
 class Panel:
-    # a list of panel paragraphs (PanelPgraph objects)
-    #
-    # a Panel is the presentation of one screen with its composition
-    #   of paragraphs
-    #
-    # panel_seq: sequence number of the Panel in the session display
-    # pgraph_list: a list of paragraph objects (PanelPgraph)
+    """
+    A list of panel paragraphs (PanelPgraph objects).
+
+    A Panel is the presentation of one screen with its composition
+       of paragraphs
+
+    panel_seq: sequence number of the Panel in the session display
+    pgraph_list: a list of paragraph objects (PanelPgraph)
+    """
 
     def __init__(self, panel_seq, pgraph_list):
         # a panel represents each display screen for a prayer session
@@ -90,14 +93,15 @@ class ControlTable:
 
 
 class ControlTableRow:
-    #
-    # current_state: the current state of the ui
-    #   (header displayed or module completed)
-    # action_module: the module to call to get user input for the current state
-    #   (default: display_panel; otherwise special function module)
-    # to_state_module: the module to call to process user input
-    #   and move to the next state
-    # to_state_panel: the header panel to pass to display_panel
+    """
+    current_state: the current state of the ui
+        (header displayed or module completed)
+    action_module: the module to call to get user input for the current
+       state (default: display_panel; otherwise special function module)
+    to_state_module: the module to call to process user input
+       and move to the next state
+    to_state_panel: the header panel to pass to display_panel
+    """
     def __init__(self, current_state, action_module,
                  to_state_module, to_state_panel):
         self.current_state = current_state
