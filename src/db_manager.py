@@ -7,13 +7,15 @@ This version uses pandas as the database.
 """
 
 import pandas as pd
+import os
+import datetime
 from mpo_model import PanelSet, Panel, PanelPgraph, \
     ControlTable, ControlTableRow
 
 
-class InitDatabase:
+class AppDatabase:
     """
-    The app database.
+    The database for the application.
 
     properties
     df_all_panels: a pandas dataframe containing all panel data
@@ -25,14 +27,45 @@ class InitDatabase:
 
     def __init__(self):  # initialize the database
         #
+        self.df_all_panels = []
+        self.df_all_prayers = []
+        # if no pickle files, load the dataframes from CSV
+        if os.path.isfile('prayers.pkl') is False:
+            self.import_database()
+        else:
+            # load dataframes from pickles
+            self.df_all_prayers = pd.read_pickle('prayers.pkl')
+            self.df_all_panels = pd.read_pickle('panels.pkl')
+            pass
+
+
+    def close_database(self):
+        """
+
+        """
+        self.df_all_prayers = pd.to_pickle('prayers.pkl')
+        self.df_all_panels = pd.to_pickle('panels.pkl')
+
+
+    def import_database(self):
+        """
+        Read in a CSV file into a dataframe.
+        """
         # create pandas dataframe from panel data CSV
         # columns: panel_set,panel_seq,pgraph_seq,header,verse,text
         self.df_all_panels = pd.read_csv('panels.csv')
-        # self.df_all_panels = self.df_all_panels.set_index(['panel_set', 'panel', 'pgraph']).sort_index()
-        # self.df_all_panels.sort_index(axis=1, inplace=True)
         # create pandas datafram from prayer data CSV
         # columns: prayer,create_date,answer_date,category,up_vote
         self.df_all_prayers = pd.read_csv('prayers.csv')
+
+    def export_database(self):
+        """
+        Create a CSV file from dataframe.
+        """
+        timestamp = datetime.datetime.now()
+        timestamp = timestamp.strftime("%d%m%Y%H%M%S")
+        self.df_all_prayers.to_csv(f'prayers{timestamp}.csv')
+        self.df_all_panels.to_csv(f'panels{timestamp}.csv')
 
 
 def create_panel_objects_from_database(db):

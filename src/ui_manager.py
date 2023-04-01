@@ -18,7 +18,7 @@ class Display:
     """
 
     def __init__(self):
-        self.last_panel = ''
+        self.command = None
 
     def display_panel(self, panel):
         """
@@ -44,8 +44,10 @@ class Display:
         """
         Get user input and go to the next step.
         """
+        response = input('hit return to continue')
+        if response == 'import' or 'export':
+            self.command = response
 
-        input('hit return to continue')
 
     def ui_get_new_prayer(self):
         new_prayer: object = None
