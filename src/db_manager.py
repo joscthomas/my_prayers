@@ -10,7 +10,7 @@ import pandas as pd
 import os
 import datetime
 from mpo_model import PanelSet, Panel, PanelPgraph, \
-    ControlTable, ControlTableRow
+    StateTransitionTable, StateTransitionTableRow
 
 
 class AppDatabase:
@@ -38,14 +38,12 @@ class AppDatabase:
             self.df_all_panels = pd.read_pickle('panels.pkl')
             pass
 
-
     def close_database(self):
         """
 
         """
         self.df_all_prayers = pd.to_pickle('prayers.pkl')
         self.df_all_panels = pd.to_pickle('panels.pkl')
-
 
     def import_database(self):
         """
@@ -63,7 +61,7 @@ class AppDatabase:
         Create a CSV file from dataframe.
         """
         timestamp = datetime.datetime.now()
-        timestamp = timestamp.strftime("%d%m%Y%H%M%S")
+        timestamp = timestamp.strftime("%Y%m%d%H%M%S")
         self.df_all_prayers.to_csv(f'prayers{timestamp}.csv')
         self.df_all_panels.to_csv(f'panels{timestamp}.csv')
 
@@ -74,7 +72,7 @@ def create_panel_objects_from_database(db):
     1. a PanelSet object (containing a list of child Panel objects)
     2. Panel objects (each containing a list of child PanelPgraph objects)
     3. PanelPgraph objects
-    4. ControlTable objects
+    4. StateTransitionTableRow objects
     """
 
     panel_set_id = get_panel_set_id()
@@ -84,60 +82,74 @@ def create_panel_objects_from_database(db):
                                      int(panel_set_id)]
     last_panel = 1
     panel_list = []
+    save_panel_header = None
     panel_pgraph_list = []
-    control_table_row_list = []
-    for row in df_panels.itertuples():  # iterate thru each row
+    state_transition_table_row_list = []
+    # a prayer session has one PanelSet
+    # a PanelSet consists of many Panels (display screens)
+    # a Panel (a screen) has many PanelPgraphs
+    # the header for a panel is in the first row
+    for row in df_panels.itertuples():  # iterate thru each row for Panel
         assert len(row.text) > 0, \
             f'assert fail CreatePanelSet: a panel row has text = null'
         # create a PanelPgraph object
         panel_pgraph = PanelPgraph(row.pgraph_seq,
-                                   row.header, row.verse, row.text)
+                                   row.verse, row.text)
+        panel_pgraph_list.append(panel_pgraph)  # save PanelPgraph in list
+        # when panel_seq changes, write the Panel and StateTransitionRow
+        #   for the prior Panel
         if last_panel != row.panel_seq:  # change of panel_seq
-            # create a Panel object
-            panel = Panel(last_panel, panel_pgraph_list)
+            # create a Panel object at the end of all its pgraphs
+            panel = Panel(last_panel, save_panel_header, panel_pgraph_list)
             panel_list.append(panel)
             panel_pgraph_list = []
-            # create a ControlTableRow
-            current_state = panel_list[-1].pgraph_list[0].header
+            # create a StateTransitionTableRow for the prior Panel
+            # the default to_state for a Panel is header of next Panel
+            to_state = row.header
+            # other default
+            action_event = 'continue_prompt'
             # special conditions to manage gathering and retrieving prayers
-            if current_state == 'MY CONCERNS':  # panel for prayers
-                action_module = 'get_new_prayers'
-                to_state_module = 'get_old_prayers'
-                to_state_panel = 'prayers done'
-            elif current_state == "GOD'S WILL":  # panel after prayers
-                action_module = 'continue_prompt'
-                to_state_module = 'display_panel'
-                to_state_panel = "GOD'S WILL"
-                current_state = 'prayers done'
-            else:  # default values
-                action_module = 'continue_prompt'
-                to_state_module = 'display_panel'
-                to_state_panel = row.header
-            control_table_row = ControlTableRow(current_state,
-                                                action_module,
-                                                to_state_module,
-                                                to_state_panel)
-            control_table_row_list.append(control_table_row)
+            if save_panel_header == 'MY CONCERNS':  # panel for prayers
+                action_event = 'get_new_prayers'
+                to_state = 'prayers done'
+                # write the row
+                state_transition_table_row = \
+                    StateTransitionTableRow(save_panel_header,
+                                            action_event,
+                                            to_state)
+                state_transition_table_row_list.append(state_transition_table_row)
+                save_panel_header = 'prayers done'
+                action_event = 'get_old_prayers'
+                to_state = "GOD'S WILL"
+            elif save_panel_header == 'CLOSE':
+                action_event = 'quit_app'
+                to_state = 'done'
+            # set to_state in prior StateTransitionTableRow
+            # last_state_transition_table_row.to_state = save_header
+            # write the state transition row for the last panel
+            state_transition_table_row = \
+                StateTransitionTableRow(save_panel_header,
+                                        action_event,
+                                        to_state)
+            state_transition_table_row_list.append(state_transition_table_row)
+            last_state_transition_table_row = state_transition_table_row
             last_panel = row.panel_seq
-        panel_pgraph_list.append(panel_pgraph)  # save PanelPgraph in list
+        # save the Panel header
+        if row.header == row.header:  # if not null (nan)
+            save_panel_header = row.header  # save header for Panel
     # create last Panel object
-    panel = Panel(last_panel, panel_pgraph_list)
+    panel = Panel(last_panel, save_panel_header, panel_pgraph_list)
     panel_list.append(panel)
     # create last ControlTableRow object
-    current_state = panel_list[-1].pgraph_list[0].header
-    action_module = 'continue_prompt'
-    to_state_module = 'quit_app'
-    to_state_panel = None
-    control_table_row = ControlTableRow(current_state,
-                                        action_module,
-                                        to_state_module,
-                                        to_state_panel)
-    control_table_row_list.append(control_table_row)
-    # create the PanelSet object
+    state_transition_table_row = \
+        StateTransitionTableRow(save_panel_header,
+                                action_event,
+                                to_state)
+    state_transition_table_row_list.append(state_transition_table_row)    # create the PanelSet object
     panel_set = PanelSet(panel_list)
-    # reate the ControlTable object
-    control_table = ControlTable(control_table_row_list)
-    return panel_set, control_table
+    # create the StateTransitionTable object
+    state_transition_table = StateTransitionTable(state_transition_table_row_list)
+    return panel_set, state_transition_table
 
 
 def get_panel_set_id():

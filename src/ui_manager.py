@@ -28,11 +28,12 @@ class Display:
         header: the header attribute of the PanelPgraph set
         """
 
+        header = None
+        if panel.panel_header == panel.panel_header:  # true if not NaN (null)
+            print(panel.header, '\n')
+            header = panel.header
         # iterate thru PanelPgraph objects associated with the Panel object
         for x in panel.pgraph_list:
-            if x.header == x.header:  # true if not NaN (null)
-                print(x.header, '\n')
-                header = x.header
             print(textwrap.fill(x.text, 80))
             if x.verse == x.verse:  # false if NaN (null)
                 print(x.verse, '\n')

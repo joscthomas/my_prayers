@@ -73,10 +73,11 @@ class Panel:
     pgraph_list: a list of paragraph objects (PanelPgraph)
     """
 
-    def __init__(self, panel_seq, pgraph_list):
+    def __init__(self, panel_seq, panel_header, pgraph_list):
         # a panel represents each display screen for a prayer session
         # a panel consists of multiple paragraphs
         self.panel_seq = panel_seq
+        self.panel_header = panel_header
         self.pgraph_list = pgraph_list
 
 
@@ -90,24 +91,23 @@ class PanelPgraph:
     verse: the Bible book chapter:verse reference (optiona)
     """
 
-    def __init__(self, pgraph_seq, header, verse, text):
+    def __init__(self, pgraph_seq, verse, text):
         self.pgraph_seq = pgraph_seq
-        self.header = header
         self.verse = verse
         self.text = text
 
-class ControlTable:
+class StateTransitionTable:
     """
-    Parent of ControlTable Rows.
+    Parent of StateTransitionTableRow.
 
-    row_list: a list of ControlTableRow objects
+    row_list: a list of StateTransitionTableRow objects
     """
 
     def __init__(self, row_list):
         self.row_list = row_list
 
 
-class ControlTableRow:
+class StateTransitionTableRow:
     """
     current_state: the current state of the ui
         (PanelPgraph header displayed, or module completed)
@@ -118,9 +118,8 @@ class ControlTableRow:
     to_state_panel: the header panel to pass to display_panel
     """
 
-    def __init__(self, current_state, action_module,
-                 to_state_module, to_state_panel):
-        self.current_state = current_state
-        self.action_module = action_module
-        self.to_state_module = to_state_module
-        self.to_state_panel = to_state_panel
+    def __init__(self, from_state, action_event, to_state):
+        self.from_state = from_state
+        self.action_event = action_event
+        self.to_state = to_state
+        # self.to_state_panel = to_state_panel

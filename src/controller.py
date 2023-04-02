@@ -9,7 +9,7 @@ MVC message sequence diagram http://bit.ly/3xj8hFa
 
 """
 
-from mpo_model import ControlTable, ControlTableRow
+from mpo_model import StateTransitionTable, StateTransitionTableRow
 from db_manager import AppDatabase, create_panel_objects_from_database, \
     create_prayer, read_prayer_set
 from ui_manager import Display
@@ -37,8 +37,8 @@ class App():
         self.uim = Display()
         # get panels data from database
         self.panel_set: object = None  # PanelSet object
-        self.control_table:object = None  # ControlTable object
-        self.panel_set, self.control_table = \
+        self.state_transition_table:object = None
+        self.panel_set, self.state_transition_table = \
             create_panel_objects_from_database(self.dbm)
         # the main loop of the app
         self.main_loop()
@@ -55,41 +55,42 @@ class App():
         # loop to display each Panel
         for x in self.panel_set.panel_list:
             header = self.uim.display_panel(x)
-            for ctr in self.control_table.row_list:
-                # find the ControlTableRow (ctr) that matches the Panel
+            for str in self.state_transition_table.row_list:
+                # find the StateTransitionTableRow (str)
+                #   that matches the Panel
                 #   (header of the first pgraph)
                 # just displayed to determine what happens next
-                if ctr.current_state == header:
-                    if ctr.action_module == 'continue_prompt':
+                if str.from_state == header:
+                    if str.action_event == 'continue_prompt':
                         self.uim.continue_prompt()
                         # special commands
                         if self.uim.command == 'import':
                             self.dbm.import_database()
                         elif self.uim.command == 'export':
                             self.dbm.export_database()
-                    elif ctr.action_module == 'get_new_prayers':
-                        self.get_new_prayer()
+                    elif str.action_event == 'get_new_prayers':
+                        self.get_new_prayers()
                     else:
                         assert False, f'unexpected y.action_module ' \
-                                      f'value: {ctr.action_module}'
+                                      f'value: {str.action_event}'
                     # now another action
-                    if ctr.to_state_module == 'display_panel':
+                    if str.to_state == 'display_panel':
                         self.uim.display_panel(x)
-                    elif ctr.to_state_module == 'get_old_prayers':
+                    elif str.to_state == 'get_old_prayers':
                         self.get_old_prayers()
-                    elif ctr.to_state_module == 'quit_app':
+                    elif str.to_state == 'quit_app':
                         quit_app(self.uim, self.dbm)
                     else:
                         assert False, f'unexpected y.to_state_module ' \
-                                      f'value: {ctr.to_state_module}'
+                                      f'value: {str.to_state}'
 
 
-    def get_new_prayer(self):
+    def get_new_prayers(self):
         """
-        Get a prayer from the ui manager.
+        Get a prayer from the UI Manager until no more.
 
-        UI manager returns a NewPrayer object.
-        Send the NewPrayer object to db manager to write it to the database.
+        UI Manager returns a NewPrayer object.
+        Send the NewPrayer object to DB Manager to write it to the database.
         """
 
         # call the ui manager to get a Prayer object
@@ -103,7 +104,7 @@ class App():
 
 
 
-    def get_old_prayers():
+    def get_old_prayers(self):
         """
         Algorithm to select old prayers, 3 at a time
         1. randomly select a category, but rotate through all
