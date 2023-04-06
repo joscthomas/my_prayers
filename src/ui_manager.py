@@ -30,8 +30,8 @@ class Display:
 
         header = None
         if panel.panel_header == panel.panel_header:  # true if not NaN (null)
-            print(panel.header, '\n')
-            header = panel.header
+            print(panel.panel_header, '\n')
+            header = panel.panel_header
         # iterate thru PanelPgraph objects associated with the Panel object
         for x in panel.pgraph_list:
             print(textwrap.fill(x.text, 80))
@@ -41,7 +41,7 @@ class Display:
                 print('\n')
         return header
 
-    def continue_prompt(self):
+    def get_continue(self):
         """
         Get user input and go to the next step.
         """

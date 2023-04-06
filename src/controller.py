@@ -37,7 +37,7 @@ class App():
         self.uim = Display()
         # get panels data from database
         self.panel_set: object = None  # PanelSet object
-        self.state_transition_table:object = None
+        self.state_transition_table: object = None
         self.panel_set, self.state_transition_table = \
             create_panel_objects_from_database(self.dbm)
         # the main loop of the app
@@ -49,41 +49,36 @@ class App():
         The main loop of the application.
 
         Display the first panel then
-            use the ControlTable to drive what happens next
+            use the StateTransitionTable to drive what happens next
         """
 
         # loop to display each Panel
-        for x in self.panel_set.panel_list:
-            header = self.uim.display_panel(x)
-            for str in self.state_transition_table.row_list:
-                # find the StateTransitionTableRow (str)
-                #   that matches the Panel
-                #   (header of the first pgraph)
-                # just displayed to determine what happens next
-                if str.from_state == header:
-                    if str.action_event == 'continue_prompt':
-                        self.uim.continue_prompt()
-                        # special commands
+        for p in self.panel_set.panel_list:
+            panel_header = self.uim.display_panel(p)
+            # loop to find the StateTransitionTableRow
+            # that matches the Panel header to find the event
+            # and the module to call that causes transition to occur
+            for s in self.state_transition_table.row_list:
+                if s.from_state == panel_header:
+                    if s.action_event == 'get_continue':
+                        self.uim.get_continue()
+                        # special commands from the continue prompt
                         if self.uim.command == 'import':
                             self.dbm.import_database()
                         elif self.uim.command == 'export':
                             self.dbm.export_database()
-                    elif str.action_event == 'get_new_prayers':
+                    elif s.action_event == 'get_new_prayers':
                         self.get_new_prayers()
-                    else:
-                        assert False, f'unexpected y.action_module ' \
-                                      f'value: {str.action_event}'
-                    # now another action
-                    if str.to_state == 'display_panel':
-                        self.uim.display_panel(x)
-                    elif str.to_state == 'get_old_prayers':
+                    elif s.action_event == 'get_old_prayers':
                         self.get_old_prayers()
-                    elif str.to_state == 'quit_app':
+                    elif s.action_event == 'quit_app':
                         quit_app(self.uim, self.dbm)
                     else:
-                        assert False, f'unexpected y.to_state_module ' \
-                                      f'value: {str.to_state}'
-
+                        assert False, f'unexpected s.action_event ' \
+                                      f'value: {s.action_event}'
+                # else:
+                #     assert False, f'unexpected s.from_state ' \
+                #                   f'value: {s.from_state}'
 
     def get_new_prayers(self):
         """

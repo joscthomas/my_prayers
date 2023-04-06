@@ -42,8 +42,8 @@ class AppDatabase:
         """
 
         """
-        self.df_all_prayers = pd.to_pickle('prayers.pkl')
-        self.df_all_panels = pd.to_pickle('panels.pkl')
+        self.df_all_prayers.to_pickle('prayers.pkl')
+        self.df_all_panels.to_pickle('panels.pkl')
 
     def import_database(self):
         """
@@ -87,15 +87,11 @@ def create_panel_objects_from_database(db):
     state_transition_table_row_list = []
     # a prayer session has one PanelSet
     # a PanelSet consists of many Panels (display screens)
-    # a Panel (a screen) has many PanelPgraphs
-    # the header for a panel is in the first row
-    for row in df_panels.itertuples():  # iterate thru each row for Panel
+    # a Panel has many PanelPgraphs
+    # the header for a Panel is in the first row
+    for row in df_panels.itertuples():  # iterate thru each Panel row
         assert len(row.text) > 0, \
             f'assert fail CreatePanelSet: a panel row has text = null'
-        # create a PanelPgraph object
-        panel_pgraph = PanelPgraph(row.pgraph_seq,
-                                   row.verse, row.text)
-        panel_pgraph_list.append(panel_pgraph)  # save PanelPgraph in list
         # when panel_seq changes, write the Panel and StateTransitionRow
         #   for the prior Panel
         if last_panel != row.panel_seq:  # change of panel_seq
@@ -107,23 +103,20 @@ def create_panel_objects_from_database(db):
             # the default to_state for a Panel is header of next Panel
             to_state = row.header
             # other default
-            action_event = 'continue_prompt'
+            action_event = 'get_continue'
             # special conditions to manage gathering and retrieving prayers
             if save_panel_header == 'MY CONCERNS':  # panel for prayers
                 action_event = 'get_new_prayers'
-                to_state = 'prayers done'
+                to_state = 'prayers_done'
                 # write the row
                 state_transition_table_row = \
                     StateTransitionTableRow(save_panel_header,
                                             action_event,
                                             to_state)
                 state_transition_table_row_list.append(state_transition_table_row)
-                save_panel_header = 'prayers done'
+                save_panel_header = 'prayers_done'
                 action_event = 'get_old_prayers'
                 to_state = "GOD'S WILL"
-            elif save_panel_header == 'CLOSE':
-                action_event = 'quit_app'
-                to_state = 'done'
             # set to_state in prior StateTransitionTableRow
             # last_state_transition_table_row.to_state = save_header
             # write the state transition row for the last panel
@@ -132,15 +125,23 @@ def create_panel_objects_from_database(db):
                                         action_event,
                                         to_state)
             state_transition_table_row_list.append(state_transition_table_row)
-            last_state_transition_table_row = state_transition_table_row
+            # last_state_transition_table_row = state_transition_table_row
             last_panel = row.panel_seq
+        # create a PanelPgraph object
+        panel_pgraph = PanelPgraph(row.pgraph_seq,
+                                   row.verse, row.text)
+        panel_pgraph_list.append(panel_pgraph)  # save PanelPgraph in list
         # save the Panel header
         if row.header == row.header:  # if not null (nan)
             save_panel_header = row.header  # save header for Panel
     # create last Panel object
     panel = Panel(last_panel, save_panel_header, panel_pgraph_list)
     panel_list.append(panel)
-    # create last ControlTableRow object
+    # create last StateTransitionTableRow object
+    if save_panel_header != 'CLOSING':
+        assert False, f'expected last panel header of CLOSING'
+    action_event = 'quit_app'
+    to_state = 'done'
     state_transition_table_row = \
         StateTransitionTableRow(save_panel_header,
                                 action_event,
