@@ -11,10 +11,11 @@ MVC message sequence diagram http://bit.ly/3xj8hFa
 
 from mpo_model import StateTransitionTable, StateTransitionTableRow
 from db_manager import AppDatabase, create_panel_objects_from_database, \
-    create_prayer, read_prayer_set
+    create_prayer
 from ui_manager import Display
 
-class App():
+
+class App:
     """
     The main loop of the application.
 
@@ -35,14 +36,17 @@ class App():
         self.dbm = AppDatabase()
         # initialize user interface manager object
         self.uim = Display()
-        # get panels data from database
+        # get panels data and state transition table from database
         self.panel_set: object = None  # PanelSet object
         self.state_transition_table: object = None
         self.panel_set, self.state_transition_table = \
             create_panel_objects_from_database(self.dbm)
+        assert check_panel_set(self.panel_set), \
+            'panel set failure'
+        assert check_state_transition_table(self.state_transition_table), \
+            'state transition table failure'
         # the main loop of the app
         self.main_loop()
-
 
     def main_loop(self):
         """
@@ -76,9 +80,6 @@ class App():
                     else:
                         assert False, f'unexpected s.action_event ' \
                                       f'value: {s.action_event}'
-                # else:
-                #     assert False, f'unexpected s.from_state ' \
-                #                   f'value: {s.from_state}'
 
     def get_new_prayers(self):
         """
@@ -95,9 +96,7 @@ class App():
             prayer, another_prayer = self.uim.ui_get_new_prayer()
             if another_prayer:
                 create_prayer(self.dbm, prayer)
-
-
-
+        pass
 
     def get_old_prayers(self):
         """
@@ -118,9 +117,72 @@ class App():
 
 
 def quit_app(uim, dbm):
-    print('quit_app')
     dbm.close_database()
     quit(0)
+
+def check_panel_set(panel_set):
+    """
+    Test the PanelSet for validity
+    """
+    header = True
+    text = True
+    for p in panel_set.panel_list:
+        if p.panel_header != p.panel_header:  # test for value
+            # print(f'!= {p.panel_header}')
+            print(f'missing header for panel {p}')  # null value
+            header = False
+        for pp in p.pgraph_list:
+            if pp.text != pp.text:
+                print(f'missing text for pgraph {pp} in panel {p}')
+                text = False
+    return header and text
+
+
+
+def check_state_transition_table(state_transition_table):
+    """
+    Test the StateTransitionTable for validity
+    """
+    welcome = True
+    my_concerns = False
+    prayers_done = False
+    gods_will = False
+    closing = False
+    get_new_prayers = False
+    get_old_prayers = False
+    quit_app = False
+    for r in state_transition_table.row_list:
+        if r == 0:
+            if r.from_state != 'WELCOME':
+                print(f'WELCOME not first StateTransitionTableRow row: '
+                      f'{r}')
+                welcome = False
+        if r.from_state != 'MY CONCERNS':
+            my_concerns = True
+        if r.from_state == 'prayers_done':
+            prayers_done = True
+        if r.from_state == "GOD'S WILL":
+            gods_will = True
+        if r.from_state == 'CLOSING':
+            closing = True
+        if r.action_event == 'get_new_prayers':
+            get_new_prayers = True
+        if r.action_event == 'get_old_prayers':
+            get_old_prayers = True
+        if r.action_event == 'quit_app':
+            quit_app = True
+    if not my_concerns: print('missing MY CONCERNS')
+    if not prayers_done: print('missing prayers_done')
+    if not gods_will: print("missing GOD'S WILL")
+    if not closing: print('missing CLOSING')
+    if not get_new_prayers: print('missing get_new_prayers')
+    if not get_old_prayers: print('missing get_old_prayers')
+    if not quit_app: print('missing quit_app')
+
+    success = welcome and my_concerns and prayers_done \
+        and gods_will and closing and get_new_prayers \
+        and get_new_prayers and quit_app
+    return success
 
 
 if __name__ == '__main__':

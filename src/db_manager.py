@@ -7,10 +7,11 @@ This version uses pandas as the database.
 """
 
 import pandas as pd
+import json
 import os
 import datetime
 from mpo_model import PanelSet, Panel, PanelPgraph, \
-    StateTransitionTable, StateTransitionTableRow
+    StateTransitionTable, StateTransitionTableRow, AppParms
 
 
 class AppDatabase:
@@ -37,13 +38,8 @@ class AppDatabase:
             self.df_all_prayers = pd.read_pickle('prayers.pkl')
             self.df_all_panels = pd.read_pickle('panels.pkl')
             pass
-
-    def close_database(self):
-        """
-
-        """
-        self.df_all_prayers.to_pickle('prayers.pkl')
-        self.df_all_panels.to_pickle('panels.pkl')
+        # get the app parameters
+        self.app_parms = get_app_parms()
 
     def import_database(self):
         """
@@ -52,8 +48,8 @@ class AppDatabase:
         # create pandas dataframe from panel data CSV
         # columns: panel_set,panel_seq,pgraph_seq,header,verse,text
         self.df_all_panels = pd.read_csv('panels.csv')
-        # create pandas datafram from prayer data CSV
-        # columns: prayer,create_date,answer_date,category,up_vote
+        # create pandas dataframe from prayer data CSV
+        # columns: prayer,create_date,answer_date,category,present_count
         self.df_all_prayers = pd.read_csv('prayers.csv')
 
     def export_database(self):
@@ -65,6 +61,18 @@ class AppDatabase:
         self.df_all_prayers.to_csv(f'prayers{timestamp}.csv')
         self.df_all_panels.to_csv(f'panels{timestamp}.csv')
 
+    def close_database(self):
+        """
+        Close the database files
+        """
+        self.df_all_prayers.to_pickle('prayers.pkl')
+        self.df_all_panels.to_pickle('panels.pkl')
+        # save the JSON application parameter file
+        dict = vars(self.app_parms)
+        file = open('parms.json', 'w')
+        json.dump(dict, file, indent=4)
+        file.close()
+
 
 def create_panel_objects_from_database(db):
     """
@@ -75,8 +83,7 @@ def create_panel_objects_from_database(db):
     4. StateTransitionTableRow objects
     """
 
-    panel_set_id = get_panel_set_id()
-    # pattern: rslt_df = dataframe.loc[dataframe['Percentage'] > 80]
+    panel_set_id = get_panel_set_id(db.df_all_panels, db.app_parms)
     # select all panels for the prayer session
     df_panels = db.df_all_panels.loc[db.df_all_panels['panel_set'] ==
                                      int(panel_set_id)]
@@ -89,7 +96,7 @@ def create_panel_objects_from_database(db):
     # a PanelSet consists of many Panels (display screens)
     # a Panel has many PanelPgraphs
     # the header for a Panel is in the first row
-    for row in df_panels.itertuples():  # iterate thru each Panel row
+    for row in df_panels.itertuples():  # iterate through each Panel row
         assert len(row.text) > 0, \
             f'assert fail CreatePanelSet: a panel row has text = null'
         # when panel_seq changes, write the Panel and StateTransitionRow
@@ -146,25 +153,44 @@ def create_panel_objects_from_database(db):
         StateTransitionTableRow(save_panel_header,
                                 action_event,
                                 to_state)
-    state_transition_table_row_list.append(state_transition_table_row)    # create the PanelSet object
+    state_transition_table_row_list.append(state_transition_table_row)  # create the PanelSet object
     panel_set = PanelSet(panel_list)
     # create the StateTransitionTable object
     state_transition_table = StateTransitionTable(state_transition_table_row_list)
     return panel_set, state_transition_table
 
 
-def get_panel_set_id():
+def get_panel_set_id(df_all_panels, app_parms):
     """
-    Access ParmsTable to get a PanelSet for display.
+    Access AppParms to get the next PanelSet for display.
     Rotate through the panel data for each prayer session.
     """
+    # find the panel set id that is next (first one greater than last one)
+    next_panel_set_row = df_all_panels[df_all_panels.panel_set
+                                       > int(app_parms.last_panel_set)].iloc[0]
+    panel_set_id = next_panel_set_row.panel_set
+    # save the current session panel_set_id as the last_panel_set in AppParms
+    app_parms.last_panel_set = str(panel_set_id)
+    pass
+    return panel_set_id
 
-    # todo get and manage last panel_set_id from parm file
-    return "20221204"
+
+def get_app_parms():
+    """
+    Get the application parameters from the JSON file
+    """
+    # Open JSON file
+    file = open('parms.json')
+    # returns JSON object as a dictionary
+    data = json.load(file)
+    app_parms = AppParms(data['id'], data['app'], data['last_panel_set'])
+    # Close file
+    file.close()
+    return app_parms
 
 
 # class DbPrayer:
-# columns: prayer,create_date,answer_date,category,up_vote
+# columns: prayer,create_date,answer_date,category,present_count
 
 # def __init__(self):
 #     pass
@@ -177,12 +203,15 @@ def read_prayer_set(self, prayer_list):
 def create_prayer(db, prayer):
     # write a prayer to the database
     i = len(db.df_all_prayers)
+    present_count = 0
+    answer = None
     db.df_all_prayers.loc[i] = \
         [prayer.prayer,
          prayer.create_date,
          prayer.answer_date,
          prayer.category,
-         None]
+         prayer.answer,
+         present_count]
     x = True
 
 

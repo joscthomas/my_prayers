@@ -30,6 +30,7 @@ class Display:
 
         header = None
         if panel.panel_header == panel.panel_header:  # true if not NaN (null)
+            print('\n')
             print(panel.panel_header, '\n')
             header = panel.panel_header
         # iterate thru PanelPgraph objects associated with the Panel object

@@ -18,8 +18,9 @@ class Prayer:
         self.create_date = today
         self.answer_date = None
         self.category = category
-        self.up_vote = None
-    # columns: prayer,create_date,answer_date,category,up_vote
+        self.answer = None
+        self.present_count = 0
+    # columns: prayer,create_date,answer_date,category,answer,present_count
 
 
     def save_new_prayers(self, prayer_list):
@@ -33,11 +34,13 @@ class Prayer:
     def update_prayers(self, prayers):
         pass
 
+
 class NewPrayers:
     new_prayer_list = []
 
     def __init__(self, prayer_list):
         self.new_prayer_list = prayer_list
+
 
 class PrayerList:
     # collect a set of prayers for presentation
@@ -96,6 +99,7 @@ class PanelPgraph:
         self.verse = verse
         self.text = text
 
+
 class StateTransitionTable:
     """
     Parent of StateTransitionTableRow.
@@ -122,4 +126,13 @@ class StateTransitionTableRow:
         self.from_state = from_state
         self.action_event = action_event
         self.to_state = to_state
-        # self.to_state_panel = to_state_panel
+
+
+class AppParms:
+    """
+
+    """
+    def __init__(self, id, app, last_panel_set):
+        self.id = id
+        self.app = app
+        self.last_panel_set = str(last_panel_set)
