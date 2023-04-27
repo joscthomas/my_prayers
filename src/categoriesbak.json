@@ -1,0 +1,15 @@
+{
+  "categories":
+  [
+    {
+      "name": "me",
+      "display_count": 0,
+      "weight": 1
+    },
+    {
+      "name": "us",
+      "display_count": 0,
+      "weight": 2
+    }
+  ]
+}

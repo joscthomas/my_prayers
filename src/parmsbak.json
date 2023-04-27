@@ -1,5 +1,16 @@
 {
-"id": 1,
-"app": "My Prayers",
-"last_panel_set": 0
+    "id": 1,
+    "id_desc": "reserved for future use",
+    "app": "My Prayers",
+    "app_desc": "name of the application",
+    "last_panel_set": "20230124",
+    "last_panel_set_desc": "id of panel set last displayed",
+    "install_path": ".",
+    "install_path_desc": "app install directory path",
+    "past_prayer_display_count": 6,
+    "past_prayer_display_count_desc": "number of existing prayers to display",
+    "prayer_streak": 0,
+    "prayer_streak_desc": "consecutive days for a prayer session",
+    "last_prayer_date": "01-Jan-1900",
+    "last_prayer_date_desc": "date of last prayer session"
 }

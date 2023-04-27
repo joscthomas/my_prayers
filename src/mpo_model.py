@@ -6,64 +6,50 @@ This model is the interface between:
     2. the controller and the database manager
 """
 
-from datetime import date
-
 
 class Prayer:
+    """
+    a prayer
+    """
 
-    def __init__(self, prayer, category):
+    # a list of all the Prayer objects
+    all_prayers = []
+    # a list of all the past (unanswered) prayers, a subset of all_prayers
+    all_past_prayers = []
+    # a list of the past prayers in display sequence
+    unique_selected_prayers = []
+
+    def __init__(self, prayer, create_date, answer_date,
+                 category, answer, display_count):
         self.prayer = prayer
-        today = date.today()
-        today = today.strftime("%d-%b-%Y")
-        self.create_date = today
-        self.answer_date = None
+        self.create_date = create_date
+        self.answer_date = answer_date
         self.category = category
-        self.answer = None
-        self.present_count = 0
-    # columns: prayer,create_date,answer_date,category,answer,present_count
+        self.answer = answer
+        self.display_count = display_count
+        Prayer.all_prayers.append(self)
 
 
-    def save_new_prayers(self, prayer_list):
-        #
-        pass
+class Category:
+    """
+    a category to classify prayers
+    """
 
-    def get_prayer(self):
-        return
+    # list of all Category objects
+    all_categories = []
+    # list of Category objects with some repeats
+    weighted_categories = []
 
-
-    def update_prayers(self, prayers):
-        pass
-
-
-class NewPrayers:
-    new_prayer_list = []
-
-    def __init__(self, prayer_list):
-        self.new_prayer_list = prayer_list
-
-
-class PrayerList:
-    # collect a set of prayers for presentation
-
-    def __init__(self, prayers):
-        # a list of Prayer objects
-        print(f'type:{type(prayers)}')
-        self.prayer_list = prayers
+    def __init__(self, category, count, weight):
+        self.category = category
+        self.category_display_count = count
+        self.category_weight = weight
+        self.category_prayer_list = []
+        Category.all_categories.append(self)
 
 
-# these objects are the blueprint for text to present
+# these objects are the blueprint for presentation
 #   to the user for a prayer session
-
-class PanelSet:
-    """
-    A list of panels to display for a PrayerSession; a panel is one screen.
-
-    panel_list: a list of Panel objects
-    """
-
-    def __init__(self, panel_list):
-        self.panel_list = panel_list
-
 
 class Panel:
     """
@@ -76,12 +62,16 @@ class Panel:
     pgraph_list: a list of paragraph objects (PanelPgraph)
     """
 
+    # list of all Panel objects
+    all_panels = []
+
     def __init__(self, panel_seq, panel_header, pgraph_list):
         # a panel represents each display screen for a prayer session
         # a panel consists of multiple paragraphs
         self.panel_seq = panel_seq
         self.panel_header = panel_header
         self.pgraph_list = pgraph_list
+        Panel.all_panels.append(self)
 
 
 class PanelPgraph:
@@ -93,25 +83,16 @@ class PanelPgraph:
     text: a text line to display (long text)
     verse: the Bible book chapter:verse reference (optiona)
     """
+    all_panel_pgraphs = []
 
     def __init__(self, pgraph_seq, verse, text):
         self.pgraph_seq = pgraph_seq
         self.verse = verse
         self.text = text
+        PanelPgraph.all_panel_pgraphs.append(self)
 
 
 class StateTransitionTable:
-    """
-    Parent of StateTransitionTableRow.
-
-    row_list: a list of StateTransitionTableRow objects
-    """
-
-    def __init__(self, row_list):
-        self.row_list = row_list
-
-
-class StateTransitionTableRow:
     """
     current_state: the current state of the ui
         (PanelPgraph header displayed, or module completed)
@@ -122,17 +103,50 @@ class StateTransitionTableRow:
     to_state_panel: the header panel to pass to display_panel
     """
 
+    all_rows = []
+
     def __init__(self, from_state, action_event, to_state):
         self.from_state = from_state
         self.action_event = action_event
         self.to_state = to_state
+        StateTransitionTable.all_rows.append(self)
 
 
 class AppParms:
     """
-
+    global application parameters from parms.json
     """
-    def __init__(self, id, app, last_panel_set):
-        self.id = id
-        self.app = app
-        self.last_panel_set = str(last_panel_set)
+
+    # the AppParms object
+    app_parms = None
+
+    def __init__(self, parms_dict):
+        self.id = parms_dict[
+            'id']
+        self.id_desc = parms_dict[
+            'id_desc']
+        self.app = parms_dict[
+            'app']
+        self.app_desc = parms_dict[
+            'app_desc']
+        self.last_panel_set = parms_dict[
+            'last_panel_set']
+        self.last_panel_set_desc = parms_dict[
+            'last_panel_set_desc']
+        self.install_path = parms_dict[
+            'install_path']
+        self.install_path_desc = parms_dict[
+            'install_path_desc']
+        self.past_prayer_display_count = parms_dict[
+            'past_prayer_display_count']
+        self.past_prayer_display_count_desc = parms_dict[
+            'past_prayer_display_count_desc']
+        self.prayer_streak = parms_dict[
+            'prayer_streak']
+        self.prayer_streak_desc = parms_dict[
+            'prayer_streak_desc']
+        self.last_prayer_date = parms_dict[
+            'last_prayer_date']
+        self.last_prayer_date_desc = parms_dict[
+            'last_prayer_date_desc']
+        AppParms.app_parms = self

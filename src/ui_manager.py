@@ -6,8 +6,10 @@ These objects are specific to the user interface technology the app uses.
 This version uses the print() statement for the user interface
 """
 
-from mpo_model import Panel, PanelPgraph, Prayer, NewPrayers
+from mpo_model import Panel, PanelPgraph, Prayer, AppParms
 import textwrap
+from datetime import date
+import readchar
 
 
 class Display:
@@ -29,27 +31,32 @@ class Display:
         """
 
         header = None
-        if panel.panel_header == panel.panel_header:  # true if not NaN (null)
+        if panel.panel_header is not None:  # true if not NaN (null)
             print('\n')
             print(panel.panel_header, '\n')
             header = panel.panel_header
         # iterate thru PanelPgraph objects associated with the Panel object
+        pass
         for x in panel.pgraph_list:
+            pass
             print(textwrap.fill(x.text, 80))
-            if x.verse == x.verse:  # false if NaN (null)
-                print(x.verse, '\n')
-            else:
+            if x.verse is not None:
                 print('\n')
+            else:  # x.verse false if NaN (null)
+                print(x.verse, '\n')
         return header
 
-    def get_continue(self):
+    def get_response(self, prompt):
         """
         Get user input and go to the next step.
         """
-        response = input('hit return to continue')
-        if response == 'import' or 'export':
-            self.command = response
 
+        print(prompt, end='')
+        response = readchar.readchar()
+        # response = input(prompt)[0]
+        if response == 'i' or 'e':
+            self.command = response
+        return response
 
     def ui_get_new_prayer(self):
         new_prayer: object = None
@@ -58,8 +65,14 @@ class Display:
         if len(prayer) > 0:
             category = input('Category?\n').strip()
             # save the new prayer
-            new_prayer = Prayer(prayer, category)
+            today = date.today()
+            today = today.strftime("%d-%b-%Y")
+            new_prayer = Prayer(prayer, create_date=today,
+                                answer_date=None, category=category,
+                                answer=None, display_count=0)
         else:
             another_prayer = False
         return new_prayer, another_prayer
 
+    def display_prayer(self, obj):
+        print('\n', textwrap.fill(obj.prayer, 80), '\n')

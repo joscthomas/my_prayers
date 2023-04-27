@@ -7,11 +7,13 @@ This version uses pandas as the database.
 """
 
 import pandas as pd
+import pickle
 import json
 import os
 import datetime
-from mpo_model import PanelSet, Panel, PanelPgraph, \
-    StateTransitionTable, StateTransitionTableRow, AppParms
+import random
+import math
+from mpo_model import Prayer, Category, Panel, PanelPgraph, AppParms
 
 
 class AppDatabase:
@@ -27,30 +29,124 @@ class AppDatabase:
     # https://stackoverflow.com/questions/17098654/how-to-reversibly-store-and-load-a-pandas-dataframe-to-from-disk
 
     def __init__(self):  # initialize the database
-        #
+        # placeholder variables for values established later
         self.df_all_panels = []
         self.df_all_prayers = []
-        # if no pickle files, load the dataframes from CSV
-        if os.path.isfile('prayers.pkl') is False:
-            self.import_database()
-        else:
-            # load dataframes from pickles
-            self.df_all_prayers = pd.read_pickle('prayers.pkl')
-            self.df_all_panels = pd.read_pickle('panels.pkl')
-            pass
-        # get the app parameters
-        self.app_parms = get_app_parms()
+        self.prayer_list_categories = []
+        self.category_objects = []
+        self.all_categories_index = 0  # points at next in all_categories
 
-    def import_database(self):
+        # get the application parameters
+        get_app_parms()
+        assert check_app_parameters(AppParms.app_parms), \
+            'app parameters failure'
+        pass
+
+        # if present, open pickle file for reading in binary mode
+        #   and unpickle the objects
+        if os.path.isfile('objects.pkl'):
+            self.unpickle_objects()
+        else:
+            # load Panel dataframe from CSV
+            self.import_panels()
+            # load prayer dataframe from CSV
+            self.import_prayers()
+        pass
+        # build category list for past prayers
+        get_categories()
+        pass
+
+        assert check_panel_set(), \
+            'panel set load failure'
+        pass
+        assert check_prayers(), \
+            'prayer load failure'
+        assert check_prayer_categories(), \
+            'prayer categories failure'
+        pass
+
+    def unpickle_objects(self):
+        with open("objects.pkl", "rb") as file:
+            unpickled_objects = pickle.load(file)
+
+        # extract the objects from the unpickled dictionary
+        Prayer = unpickled_objects['Prayer']
+        # Category = unpickled_objects['Category']
+        Panel = unpickled_objects['Panel']
+        PanelPgraph = unpickled_objects['PanelPgraph']
+        prayer_instances = unpickled_objects['Prayer_instances']
+        past_prayer_instances = unpickled_objects['Prayer_past_instances']
+        unique_selected_prayers = \
+            unpickled_objects['Prayer_unique_selected_prayers']
+        # category_instances = unpickled_objects['Category_instances']
+        panel_instances = unpickled_objects['Panel_instances']
+        panel_pgraph_instances = unpickled_objects['PanelPgraph_instances']
+        pass
+
+        Prayer.all_prayers = prayer_instances
+        Prayer.all_past_prayers = past_prayer_instances
+        Prayer.unique_selected_prayers = unique_selected_prayers
+
+        Panel.all_panels = panel_instances
+        PanelPgraph.all_panel_pgraphs = panel_pgraph_instances
+        pass
+
+        # for obj in Prayer.all_prayers:
+        #     print(f'Prayer object address: {id(obj)}',)
+        #     for attr_name, attr_value in vars(obj).items():
+        #         print(f"{attr_name}: {attr_value}")
+        #
+        # pass
+
+    def import_panels(self):
         """
-        Read in a CSV file into a dataframe.
+        Read the panel CSV file into a dataframe then instantiate
+        Panel objects
         """
         # create pandas dataframe from panel data CSV
         # columns: panel_set,panel_seq,pgraph_seq,header,verse,text
         self.df_all_panels = pd.read_csv('panels.csv')
+        # strip tabs, CRs, and LFs
+        self.df_all_panels.replace(
+            to_replace=[r"\\t|\\n|\\r", "\t|\n|\r"], value=["", ""],
+            regex=True, inplace=True)
+        # strip leading and trailing spaces in all fields
+        for col in self.df_all_panels.columns:
+            try:
+                self.df_all_panels[col] = \
+                    self.df_all_panels[col].str.strip()
+            except AttributeError:
+                pass
+        # instantiate Panel objects
+        instantiate_panel_objects(self.df_all_panels)
+        del self.df_all_panels
+        pass
+
+    def import_prayers(self):
         # create pandas dataframe from prayer data CSV
         # columns: prayer,create_date,answer_date,category,present_count
         self.df_all_prayers = pd.read_csv('prayers.csv')
+        # strip tabs, CRs, and LFs
+        self.df_all_prayers.replace(
+            to_replace=[r"\\t|\\n|\\r", "\t|\n|\r"], value=["", ""],
+            regex=True, inplace=True)
+        # strip leading and trailing spaces in all fields
+        for col in self.df_all_prayers.columns:
+            try:
+                self.df_all_prayers[col] = \
+                    self.df_all_prayers[col].str.strip()
+            except AttributeError:
+                pass
+        # create Prayer objects
+        pass
+        for row in self.df_all_prayers.itertuples():
+            prayer = Prayer(row.prayer, row.create_date, row.answer_date,
+                            row.category, row.answer, display_count=0)
+            if pd.isna(row.answer_date):
+                Prayer.all_past_prayers.append(prayer)
+        pass
+        del self.df_all_prayers
+        pass
 
     def export_database(self):
         """
@@ -58,119 +154,114 @@ class AppDatabase:
         """
         timestamp = datetime.datetime.now()
         timestamp = timestamp.strftime("%Y%m%d%H%M%S")
-        self.df_all_prayers.to_csv(f'prayers{timestamp}.csv')
-        self.df_all_panels.to_csv(f'panels{timestamp}.csv')
+        # todo convert set of Prayer and Panel objects to CSV
+        # self.df_all_prayers.to_csv(f'prayers{timestamp}.csv')
+        # self.df_all_panels.to_csv(f'panels{timestamp}.csv')
 
     def close_database(self):
         """
-        Close the database files
+        Persist the database files
         """
-        self.df_all_prayers.to_pickle('prayers.pkl')
-        self.df_all_panels.to_pickle('panels.pkl')
+        # create a dictionary containing the objects to be pickled
+        objects_to_pickle = {
+            'Prayer': Prayer,
+            'Category': Category,
+            'Panel': Panel,
+            'PanelPgraph': PanelPgraph,
+            'Prayer_instances': Prayer.all_prayers,
+            'Prayer_past_instances': Prayer.all_past_prayers,
+            'Prayer_unique_selected_prayers':
+                Prayer.unique_selected_prayers,
+            'Category_instances': Category.all_categories,
+            'Panel_instances': Panel.all_panels,
+            'PanelPgraph_instances': PanelPgraph.all_panel_pgraphs
+        }
+        pass
+
+        # open a file for writing in binary mode and pickle the objects
+        with open("objects.pkl", "wb") as file:
+            pickle.dump(objects_to_pickle, file)
+
+        # save the JSON category file
+        data = {"categories": []}
+
+        for category in Category.all_categories:
+            data["categories"].append({
+                "name": category.category,
+                "display_count": category.category_display_count,
+                "weight": category.category_weight
+            })
+
+        with open("categories.json", "w") as outfile:
+            json.dump(data, outfile, indent=4)
+
+
+        # parameters_dictionary = vars(Category.all_categories)
+        # with open('categories.json', 'w') as file:
+        #     json.dump(parameters_dictionary, file, indent=4)
+
         # save the JSON application parameter file
-        dict = vars(self.app_parms)
-        file = open('parms.json', 'w')
-        json.dump(dict, file, indent=4)
-        file.close()
+        parameters_dictionary = vars(AppParms.app_parms)
+        with open('parms.json', 'w') as file:
+            json.dump(parameters_dictionary, file, indent=4)
 
 
-def create_panel_objects_from_database(db):
+def instantiate_panel_objects(df_all_panels):
     """
-    A function to create:
-    1. a PanelSet object (containing a list of child Panel objects)
-    2. Panel objects (each containing a list of child PanelPgraph objects)
-    3. PanelPgraph objects
-    4. StateTransitionTableRow objects
+    instantiate:
+    1. Panel objects (each containing a list of child PanelPgraph objects)
+    2. PanelPgraph objects
     """
-
-    panel_set_id = get_panel_set_id(db.df_all_panels, db.app_parms)
-    # select all panels for the prayer session
-    df_panels = db.df_all_panels.loc[db.df_all_panels['panel_set'] ==
-                                     int(panel_set_id)]
-    last_panel = 1
-    panel_list = []
-    save_panel_header = None
+    # identify the panel set for this prayer session
+    panel_set_id = get_panel_set_id(df_all_panels)
+    # get all panels for the prayer session
+    df_panels = df_all_panels.loc[df_all_panels['panel_set'] ==
+                                  int(panel_set_id)]
+    last_panel_seq = 0
     panel_pgraph_list = []
-    state_transition_table_row_list = []
-    # a prayer session has one PanelSet
-    # a PanelSet consists of many Panels (display screens)
-    # a Panel has many PanelPgraphs
+    # a prayer session has a set of Panel objects (display screens)
+    # a Panel has many PanelPgraph objects (text for display screen)
     # the header for a Panel is in the first row
     for row in df_panels.itertuples():  # iterate through each Panel row
         assert len(row.text) > 0, \
-            f'assert fail CreatePanelSet: a panel row has text = null'
-        # when panel_seq changes, write the Panel and StateTransitionRow
-        #   for the prior Panel
-        if last_panel != row.panel_seq:  # change of panel_seq
-            # create a Panel object at the end of all its pgraphs
-            panel = Panel(last_panel, save_panel_header, panel_pgraph_list)
-            panel_list.append(panel)
-            panel_pgraph_list = []
-            # create a StateTransitionTableRow for the prior Panel
-            # the default to_state for a Panel is header of next Panel
-            to_state = row.header
-            # other default
-            action_event = 'get_continue'
-            # special conditions to manage gathering and retrieving prayers
-            if save_panel_header == 'MY CONCERNS':  # panel for prayers
-                action_event = 'get_new_prayers'
-                to_state = 'prayers_done'
-                # write the row
-                state_transition_table_row = \
-                    StateTransitionTableRow(save_panel_header,
-                                            action_event,
-                                            to_state)
-                state_transition_table_row_list.append(state_transition_table_row)
-                save_panel_header = 'prayers_done'
-                action_event = 'get_old_prayers'
-                to_state = "GOD'S WILL"
-            # set to_state in prior StateTransitionTableRow
-            # last_state_transition_table_row.to_state = save_header
-            # write the state transition row for the last panel
-            state_transition_table_row = \
-                StateTransitionTableRow(save_panel_header,
-                                        action_event,
-                                        to_state)
-            state_transition_table_row_list.append(state_transition_table_row)
-            # last_state_transition_table_row = state_transition_table_row
-            last_panel = row.panel_seq
-        # create a PanelPgraph object
+            f'assert fail create Panel: a panel row has text = null'
+        if last_panel_seq != row.panel_seq:
+            # new panel when panel_seq changes
+            if last_panel_seq > 0:  # not the first time through
+                # set panel pgraph list for previous panel
+                panel.pgraph_list = panel_pgraph_list
+                panel_pgraph_list = []
+            # instantiate a new Panel object
+            panel = Panel(row.panel_seq, row.header, pgraph_list=[])
+        # instantiate a PanelPgraph object
         panel_pgraph = PanelPgraph(row.pgraph_seq,
                                    row.verse, row.text)
-        panel_pgraph_list.append(panel_pgraph)  # save PanelPgraph in list
-        # save the Panel header
-        if row.header == row.header:  # if not null (nan)
-            save_panel_header = row.header  # save header for Panel
-    # create last Panel object
-    panel = Panel(last_panel, save_panel_header, panel_pgraph_list)
-    panel_list.append(panel)
-    # create last StateTransitionTableRow object
-    if save_panel_header != 'CLOSING':
-        assert False, f'expected last panel header of CLOSING'
-    action_event = 'quit_app'
-    to_state = 'done'
-    state_transition_table_row = \
-        StateTransitionTableRow(save_panel_header,
-                                action_event,
-                                to_state)
-    state_transition_table_row_list.append(state_transition_table_row)  # create the PanelSet object
-    panel_set = PanelSet(panel_list)
-    # create the StateTransitionTable object
-    state_transition_table = StateTransitionTable(state_transition_table_row_list)
-    return panel_set, state_transition_table
+        panel_pgraph_list.append(panel_pgraph)
+        last_panel_seq = row.panel_seq
+        pass
+    panel.pgraph_list = panel_pgraph_list
+    pass
+    return
 
 
-def get_panel_set_id(df_all_panels, app_parms):
+def get_panel_set_id(df_all_panels):
     """
     Access AppParms to get the next PanelSet for display.
     Rotate through the panel data for each prayer session.
     """
     # find the panel set id that is next (first one greater than last one)
-    next_panel_set_row = df_all_panels[df_all_panels.panel_set
-                                       > int(app_parms.last_panel_set)].iloc[0]
+    last_panel_set = AppParms.app_parms.last_panel_set
+    try:
+        next_panel_set_row = df_all_panels[df_all_panels.panel_set
+                                           > int(last_panel_set)].iloc[0]
+    except IndexError:
+        # Handle the case where no row with panel_set greater than
+        #   the last_panel_set is found by resetting to the first row
+        next_panel_set_row = df_all_panels[df_all_panels.panel_set
+                                           > int(1)].iloc[0]
     panel_set_id = next_panel_set_row.panel_set
     # save the current session panel_set_id as the last_panel_set in AppParms
-    app_parms.last_panel_set = str(panel_set_id)
+    AppParms.app_parms.last_panel_set = str(panel_set_id)
     pass
     return panel_set_id
 
@@ -180,39 +271,32 @@ def get_app_parms():
     Get the application parameters from the JSON file
     """
     # Open JSON file
-    file = open('parms.json')
-    # returns JSON object as a dictionary
-    data = json.load(file)
-    app_parms = AppParms(data['id'], data['app'], data['last_panel_set'])
-    # Close file
-    file.close()
-    return app_parms
-
-
-# class DbPrayer:
-# columns: prayer,create_date,answer_date,category,present_count
-
-# def __init__(self):
-#     pass
-
-def read_prayer_set(self, prayer_list):
-    # algorithm to select a set of prayers from the database
+    with open('parms.json') as file:
+        data = json.load(file)
+    AppParms(data)
     pass
+    return
 
 
 def create_prayer(db, prayer):
     # write a prayer to the database
-    i = len(db.df_all_prayers)
-    present_count = 0
-    answer = None
-    db.df_all_prayers.loc[i] = \
-        [prayer.prayer,
-         prayer.create_date,
-         prayer.answer_date,
-         prayer.category,
-         prayer.answer,
-         present_count]
-    x = True
+    #
+    # since all app data is in memory and not persisted until
+    #   the app ends, there is nothing to persist/write at this point;
+    #   perhaps when data is stored in a database then this makes sense
+    #
+    # add the prayer to the end of the prayer dataframe
+    # i = len(db.df_all_prayers)
+    # present_count = 0
+    # answer = None
+    # db.df_all_prayers.loc[i] = \
+    #     [prayer.prayer,
+    #      prayer.create_date,
+    #      prayer.answer_date,
+    #      prayer.category,
+    #      prayer.answer,
+    #      present_count]
+    pass
 
 
 def update_prayer(self):
@@ -223,3 +307,160 @@ def update_prayer(self):
 def delete_prayer(self):
     # delete a prayer in the database
     pass
+
+
+def get_categories():
+    """
+    Instantiate Category objects
+    1. Get the persisted categories
+    2. Get from past prayers any categories not persisted
+    3. Instantiate Category objects for categories
+    4. Store in each Category object a list of prayers for the category
+    5. Weight some categories by repeating them
+    6. Randomize the list of weighted categories
+    """
+    # retrieve the persisted list of categories
+    with open('categories.json') as file:
+        data = json.load(file)
+    # instantiate a Category object for each category in the JSON file
+    json_categories = []
+    for c in data['categories']:
+        c_obj = Category(c['name'], c['display_count'], c['weight'])
+        json_categories.append(c['name'])
+    pass
+    # get a list of prayer categories from the list of past prayers
+    prayer_list_categories = set(obj.category for obj
+                                 in Prayer.all_past_prayers)
+    pass
+    # get the categories in prayer_list that are not in the JSON file
+    unique_categories = [item for item in prayer_list_categories
+                         if item not in json_categories]
+    pass
+    for c in unique_categories:
+        # print(c)
+        obj = Category(category=c, count=0, weight=1)
+    pass
+    # collect a list of Prayer objects for each Category
+    for cobj in Category.all_categories:
+        prayer_category = cobj.category
+        prayers = [prayer for prayer in Prayer.all_past_prayers
+                   if prayer.category == prayer_category]
+        cobj.category_prayer_list = prayers
+    pass
+    # weight categories by repeating them in the list
+    # weighted_categories = Category.all_categories
+    Category.weighted_categories = []
+    pass
+    for co in Category.all_categories:
+        # print(co, co.category, co.category_weight)
+        n = co.category_weight - 1
+        for i in range(0, n):
+            # print(co.category)
+            Category.weighted_categories.append(co)
+            pass
+        pass
+    pass
+    Category.weighted_categories = Category.weighted_categories \
+                                   + Category.all_categories
+    pass
+    # randomize the list of category objects
+    random.shuffle(Category.weighted_categories)
+    pass
+
+
+def check_panel_set():
+    """
+    Test the loading of the Panel objects for validity
+    """
+    pickle_panel_list = []  # fix this
+    pickle_load = True
+    if len(pickle_panel_list) > 0:
+        # loaded from pickle file
+        if Panel.all_panels != pickle_panel_list:
+            print('panel pickle load failure')
+            pickle_load = False
+    pass
+    if len(Panel.all_panels) <= 0:
+        print('all_panels empty')
+        header = False
+        text = False
+    else:
+        header = True
+        text = True
+        for p in Panel.all_panels:
+            if p.panel_header is None:
+                print(f'missing header for panel {p}')
+                header = False
+            for pp in p.pgraph_list:
+                if pp.text is None:
+                    print(f'missing text for pgraph {pp} in panel {p}')
+                    text = False
+    success = header and text and pickle_load
+    return success
+
+
+def check_prayers():
+    """
+    Test the loading of the Prayer objects for validity
+    """
+    pickle_prayer_list = []  # fix this
+    pickle_load = True
+    if len(pickle_prayer_list) > 0:
+        # loaded from pickle file
+        if Prayer.all_prayers != pickle_prayer_list:
+            print('prayer pickle load failure')
+            pickle_load = False
+    pass
+    all_prayers = True
+    if len(Prayer.all_prayers) <= 0:
+        all_prayers = False
+        print('all_prayers empty')
+
+    success = all_prayers and pickle_load
+    return success
+
+
+def check_app_parameters(parameters):
+    """
+    Test the app parameters for validity
+    """
+    last_panel_set = True
+    if parameters.last_panel_set != parameters.last_panel_set:
+        last_panel_set = False
+    install_path = True
+    if parameters.install_path != parameters.install_path:
+        install_path = False
+    past_prayer_display_count = True
+    if parameters.past_prayer_display_count != \
+            parameters.past_prayer_display_count:
+        past_prayer_display_count = False
+
+    success = last_panel_set and install_path and past_prayer_display_count
+    return success
+
+
+def check_prayer_categories():
+    category_prayers = True
+    prayer_count = 0
+    for obj in Category.all_categories:
+        prayer_count = prayer_count + len(obj.category_prayer_list)
+    if prayer_count == 0:
+        print('category_prayer_lists empty')
+        category_prayers = False
+    if len(Prayer.all_prayers) > 0:
+        all_prayers = True
+    else:
+        all_prayers = False
+        print('all_prayers empty')
+    if len(Prayer.all_past_prayers) > 0:
+        past_prayers = True
+    else:
+        past_prayers = False
+        print('all_past_prayers empty')
+
+    if not os.path.isfile('categories.json'):
+        print('no categories.json file')
+
+    success = category_prayers and all_prayers and past_prayers \
+              and os.path.isfile('categories.json')
+    return success
