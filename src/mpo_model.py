@@ -1,11 +1,12 @@
 """
-Class model for the My Prayer objects.
+Class model for My Prayer objects.
 
 This model is the interface between:
     1. the controller and the user interface manager
     2. the controller and the database manager
 """
 
+from datetime import date, datetime
 
 class Prayer:
     """
@@ -22,7 +23,12 @@ class Prayer:
     def __init__(self, prayer, create_date, answer_date,
                  category, answer, display_count):
         self.prayer = prayer
-        self.create_date = create_date
+        if create_date is None:
+            today = date.today()
+            today = today.strftime("%d-%b-%Y")
+            self.create_date = today
+        else:
+            self.create_date = create_date
         self.answer_date = answer_date
         self.category = category
         self.answer = answer
@@ -81,7 +87,7 @@ class PanelPgraph:
     panel: sequence number of the paragraph within the Panel
     header: the heading (short text) for the panel; indicates the PanelType
     text: a text line to display (long text)
-    verse: the Bible book chapter:verse reference (optiona)
+    verse: the Bible book chapter:verse reference (optional)
     """
     all_panel_pgraphs = []
 
@@ -112,41 +118,62 @@ class StateTransitionTable:
         StateTransitionTable.all_rows.append(self)
 
 
-class AppParms:
+class AppParams:
     """
-    global application parameters from parms.json
+    global application parameters from params.json
     """
 
-    # the AppParms object
-    app_parms = None
+    # the AppParams object
+    app_params = None
 
-    def __init__(self, parms_dict):
-        self.id = parms_dict[
+    def __init__(self, params_dict):
+        self.id = params_dict[
             'id']
-        self.id_desc = parms_dict[
+        self.id_desc = params_dict[
             'id_desc']
-        self.app = parms_dict[
+        self.app = params_dict[
             'app']
-        self.app_desc = parms_dict[
+        self.app_desc = params_dict[
             'app_desc']
-        self.last_panel_set = parms_dict[
+        self.last_panel_set = params_dict[
             'last_panel_set']
-        self.last_panel_set_desc = parms_dict[
+        self.last_panel_set_desc = params_dict[
             'last_panel_set_desc']
-        self.install_path = parms_dict[
+        self.install_path = params_dict[
             'install_path']
-        self.install_path_desc = parms_dict[
+        self.install_path_desc = params_dict[
             'install_path_desc']
-        self.past_prayer_display_count = parms_dict[
+        self.past_prayer_display_count = params_dict[
             'past_prayer_display_count']
-        self.past_prayer_display_count_desc = parms_dict[
+        self.past_prayer_display_count_desc = params_dict[
             'past_prayer_display_count_desc']
-        self.prayer_streak = parms_dict[
+        self.prayer_streak = params_dict[
             'prayer_streak']
-        self.prayer_streak_desc = parms_dict[
+        self.prayer_streak_desc = params_dict[
             'prayer_streak_desc']
-        self.last_prayer_date = parms_dict[
+        self.last_prayer_date = params_dict[
             'last_prayer_date']
-        self.last_prayer_date_desc = parms_dict[
+        self.last_prayer_date_desc = params_dict[
             'last_prayer_date_desc']
-        AppParms.app_parms = self
+        AppParams.app_params = self
+
+class PrayerSession:
+    """
+    Track details about each prayer session.
+    """
+    # list of PrayerSession instances
+    prayer_session_list = []
+    # the object for the prayer session going on now
+    current_prayer_session = None
+    # the object for the previous prayer session
+    prior_prayer_session = None
+
+    def __init__(self):
+        today = date.today()
+        today = today.strftime("%d-%b-%Y")
+        self.session_date = today
+        self.new_prayer_added_count = 0
+        self.past_prayer_prayed_count = 0
+        self.answered_prayer_count = 0
+        PrayerSession.prayer_session_list.append(self)
+        PrayerSession.current_prayer_session = self
