@@ -112,8 +112,9 @@ class AppDatabase:
 
     def import_panels(self):
         """
+        A panel is the set of screens to display for a prayer session.
         Read the panel CSV file into a pandas dataframe then instantiate
-        Panel objects
+        Panel objects.
 
         columns: panel_set,panel_seq,pgraph_seq,header,verse,text
         """
@@ -183,7 +184,7 @@ class AppDatabase:
         # self.df_all_prayers.to_csv(f'prayers{timestamp}.csv')
         # self.df_all_panels.to_csv(f'panels{timestamp}.csv')
 
-    @staticmethod
+    # @staticmethod
     def close_database(self):
         """
         Persist the database files

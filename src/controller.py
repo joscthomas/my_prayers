@@ -4,7 +4,7 @@ My Prayers Controller (Controller of the MVC model)
 These objects manage the relationship between the user interface
    controller and the database controller.
 
-MVC spreadsheet http://bit.ly/3jHdljS
+MVC messages spreadsheet http://bit.ly/3jHdljS
 MVC message sequence diagram http://bit.ly/3xj8hFa
 
 """
@@ -13,8 +13,8 @@ from datetime import datetime, timedelta
 import random
 from mpo_model import Prayer, Category, Panel, StateTransitionTable, \
     AppParams, PrayerSession
-from db_manager import AppDatabase, create_prayer
-from ui_manager import Display
+from db_manager import AppDatabase #, create_prayer
+from ui_manager import AppDisplay
 
 
 class App:
@@ -37,7 +37,7 @@ class App:
         self.dbm = AppDatabase()
 
         # initialize user interface manager object
-        self.uim = Display()
+        self.uim = AppDisplay()
 
         # build state transition table from Panel objects
         self.build_state_transition_table()
@@ -66,7 +66,7 @@ class App:
         """
         The main loop of the application.
 
-        Display the first panel then
+        Display the first panel then use
             the StateTransitionTable to drive what happens next
         """
 
@@ -122,17 +122,17 @@ class App:
     def get_past_prayers(self):
         """
         Algorithm to select past prayers
-        1. randomly select a category, but rotate through all
+        1. Randomly select a category, but rotate through all
             extract categories and save them in a file
             with last presentation date
-        2. randomly select prayers within a category
-        3. display_count tracks number of times that a prayer is
+        2. Randomly select prayers within a category
+        3. Display_count tracks number of times that a prayer is
             shown
 
-        repeat until done:
-            - get old_prayer_display_count number of prayers
+        Repeat until done:
+            - Get old_prayer_display_count number of prayers
                 from the database
-            - send old_prayer_display_count number of prayers
+            - Send old_prayer_display_count number of prayers
                 to the ui for display
         """
         # get a list of prayers from the last 7 days
@@ -149,7 +149,7 @@ class App:
         pass
 
         # randomly select
-        # create a list of lists of Prayer objects
+        # create a list of lists for Prayer objects
         #   starting with the list of recent Prayer objects
         prayer_lists = []
         prayer_lists.append(recent_prayers)
@@ -228,7 +228,7 @@ class App:
                 break
             response = self.uim.get_response(
                 'enter "more" or "done" ')
-            if response.lower() == 'd':
+            if response.lower() == 'd' or 'done':
                 break
         pass
 
@@ -318,7 +318,7 @@ class App:
         # and gods_will
         return success
 
-    @staticmethod
+#    @staticmethod
     def quit_app(uim, dbm):
         dbm.close_database()
         uim.close_ui()

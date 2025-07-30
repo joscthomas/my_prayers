@@ -11,7 +11,7 @@ import textwrap
 from datetime import date, datetime
 
 
-class Display:
+class AppDisplay:
     """
     The intermediary between the user and the data
 

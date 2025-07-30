@@ -1,7 +1,9 @@
 This app manages a list of prayers. Its user interface provides the ability 
-to:
+to conduct a prayer session.
+
 
 Here is the flow upon running the app: 
+
     - Open a prayer session
         - Present welcome message to set the context and mood
             - click to proceed
@@ -13,28 +15,39 @@ Here is the flow upon running the app:
             to the database 
             - Click button to add more prayers
             - Click to proceed
-        - Retrieve a group of three prayers from the database
-            -Use an algorithm to select the three prayers
+        - Retrieve a group of N prayers from the database
+            -Use an algorithm to select the prayers
                 -Algorithm chooses randomly, but weighted so most recent
                 prayers are first
-            - Repeat presenting prayers three at a time
+            - Repeat presenting prayers N at a time
                 - Until clicking end button
         - Present a message of hope and encouragement
         - Present a closing message
         - End
 
+Key Concepts:
+
+    - PrayerSession : a period of prayer
+    - PanelSet : a set of Panels to present on the computer display during a PrayerSession
+    - 
+
 Directory structure
+
     - mp_project : parent directory of my_prayers
         - src : contains Python source code for project
         - test : contains Python source code for automated testing of the main project
         - db : contains SQLite database
 
 Configuration management
+
     - git status 
     - git add filename.py
     - git commit -m message
     - git push
 
+To run a test: 
+
+    - Delete objects.pkl in src
 
 Main module : my_prayers.py
 
