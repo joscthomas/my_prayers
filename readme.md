@@ -49,6 +49,15 @@ To run a test:
 
     - Delete objects.pkl in src
 
+To generate UML class diagrams: 
+
+    - open Windows Command window
+    - cd C:\Users\jcthomas\Documents\JCT Documents\Python\my_prayers_project\src
+    - pyreverse -o png -p MyPrayers .
+    - move classes_MyPrayers.png, packages_MyPrayers.png to diagrams/
+    - ![Class Diagram](diagrams/classes_PrayerApp.png)
+
+
 Main module : my_prayers.py
 
 		

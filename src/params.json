@@ -7,10 +7,10 @@
     "last_panel_set_desc": "id of panel set last displayed",
     "install_path": ".",
     "install_path_desc": "app install directory path",
-    "past_prayer_display_count": 6,
+    "past_prayer_display_count": 3,
     "past_prayer_display_count_desc": "number of existing prayers to display",
     "prayer_streak": 1,
     "prayer_streak_desc": "consecutive days for a prayer session",
-    "last_prayer_date": "26-Apr-2023",
+    "last_prayer_date": "31-Jul-2025",
     "last_prayer_date_desc": "date of last prayer session"
 }
