@@ -76,7 +76,7 @@ class AppDisplay:
 
             category = input("Category?\n").strip()
             if not category:
-                logging.warning("Empty category provided, using default 'General'")
+                logging.warning("Empty category_name provided, using default 'General'")
                 category = "General"
 
             today = date.today().strftime("%d-%b-%Y")
@@ -84,7 +84,7 @@ class AppDisplay:
                 prayer=prayer_text,
                 create_date=today,
                 answer_date=None,
-                category=category,
+                category_name=category,
                 answer=None,
                 display_count=0
             )

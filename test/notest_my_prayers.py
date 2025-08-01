@@ -64,9 +64,9 @@ def check_db(db_connection):
     # check each table in turn
     # (see create_db_tables in my_prayers.py for table definition)
 
-    table_name = 'category'
+    table_name = 'category_name'
     table_cols = 'category_name'
-    col_values = '"test category 1"'
+    col_values = '"test category_name 1"'
     check_table(db_connection, table_name, table_cols, col_values)
 
     table_name = 'prayer'
@@ -80,11 +80,11 @@ def check_db(db_connection):
     check_table(db_connection, table_name, table_cols, col_values)
 
     # Delete all rows for each table in turn
-    # Delete prayer first because of FK constraint on category
+    # Delete prayer first because of FK constraint on category_name
     table_name = 'prayer'
     del_table_rows(db_connection, table_name)
 
-    table_name = 'category'
+    table_name = 'category_name'
     del_table_rows(db_connection, table_name)
 
     # Delete message first

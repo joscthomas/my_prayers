@@ -20,11 +20,11 @@ class Prayer(Base):
     answer_text = Column(String)
     answer_date = Column(String)
     display_count = Column(Integer)
-    category_id = Column(Integer, ForeignKey('category.category_id'))
+    category_id = Column(Integer, ForeignKey('category_name.category_id'))
 
 
 class Category(Base):
-    __tablename__ = 'category'
+    __tablename__ = 'category_name'
     category_id = Column(Integer, primary_key=True)
     category_name = Column(String)
     prayers = relationship('Prayer', backref=backref('prayer'))

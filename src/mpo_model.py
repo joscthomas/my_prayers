@@ -15,16 +15,16 @@ class Prayer:
     """Represents a prayer in the My Prayers application."""
 
     def __init__(self, prayer: str, create_date: Optional[str] = None, answer_date: Optional[str] = None,
-                 category: str = "General", answer: Optional[str] = None, display_count: int = 0):
+                 category_name: str = "General", answer: Optional[str] = None, display_count: int = 0):
         if not prayer:
             raise ModelError("Prayer text cannot be empty")
-        if category is None:
+        if category_name is None:
             raise ModelError("Category cannot be None")
 
         self._prayer = prayer
         self._create_date = create_date or date.today().strftime("%d-%b-%Y")
         self._answer_date = answer_date
-        self._category = category
+        self._category_name = category_name
         self._answer = answer
         self._display_count = display_count if display_count >= 0 else 0
 
@@ -46,7 +46,7 @@ class Prayer:
 
     @property
     def category(self) -> str:
-        return self._category
+        return self._category_name
 
     @property
     def answer(self) -> Optional[str]:
@@ -68,24 +68,24 @@ class Prayer:
 
 
 class Category:
-    """Represents a category to classify prayers."""
+    """Represents a category_name to classify prayers."""
 
-    def __init__(self, category: str, count: int = 0, weight: int = 1):
-        if not category:
+    def __init__(self, category_name: str, count: int = 0, weight: int = 1):
+        if not category_name:
             raise ModelError("Category name cannot be empty")
         if count < 0:
             raise ModelError("Category count cannot be negative")
         if weight < 1:
             raise ModelError("Category weight must be at least 1")
 
-        self._category = category
+        self._category_name = category_name
         self._category_display_count = count
         self._category_weight = weight
         self._category_prayer_list: List[Prayer] = []
 
     @property
     def category(self) -> str:
-        return self._category
+        return self._category_name
 
     @property
     def category_display_count(self) -> int:

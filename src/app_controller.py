@@ -1,11 +1,10 @@
 # app_controller.py
 # Coordinates between Model (AppDatabase, StateMachine) and View (AppDisplay).
 
-from datetime import datetime, timedelta
+import logging
+from datetime import datetime, date
 import random
 from typing import List, Optional
-import logging
-
 from mpo_model import Prayer, Category, Panel, AppParams, PrayerSession, State, StateMachine, ModelError
 from db_manager import AppDatabase
 from ui_manager import AppDisplay
@@ -19,33 +18,51 @@ class PrayerSelector:
 
     def __init__(self, db_manager: AppDatabase):
         self.db_manager = db_manager
+        self.displayed_prayers: set = set()  # Track prayers displayed in this session
 
-    def select_past_prayers(self, days_back: int = 7, max_selections: int = 20) -> List[Prayer]:
-        """Select a list of past prayers based on recent activity and categories."""
-        current_date = datetime.now()
-        start_date = current_date - timedelta(days=days_back)
-        recent_prayers = [
-            prayer for prayer in self.db_manager.prayer_manager.past_prayers
-            if datetime.strptime(prayer.create_date, '%d-%b-%Y') >= start_date
+    def reset_session(self):
+        """Reset displayed prayers for a new session."""
+        self.displayed_prayers.clear()
+
+    def select_past_prayers(self, max_selections: int, current_weight: int) -> List[Prayer]:
+        """Select unanswered prayers from previous sessions based on category weight."""
+        today = date.today().strftime("%d-%b-%Y")
+        # Get unanswered prayers from previous sessions
+        eligible_prayers = [
+            prayer for prayer in self.db_manager.prayer_manager.get_unanswered_prayers()
+            if prayer.create_date != today and prayer.prayer not in self.displayed_prayers
         ]
+        if not eligible_prayers:
+            logging.warning("No eligible past unanswered prayers found")
+            return []
 
-        # Combine recent prayers and category-based prayer lists
-        prayer_lists = [recent_prayers] + [cat.category_prayer_list for cat in
-                                           self.db_manager.category_manager.weighted_categories]
-        weights = [0.5] + [cat.category_weight for cat in self.db_manager.category_manager.weighted_categories]
-        selected_prayers = set()
+        # Group prayers by category weight
+        weight_groups = {}
+        for prayer in eligible_prayers:
+            category = next((cat for cat in self.db_manager.category_manager.categories if cat.category == prayer.category), None)
+            weight = category.category_weight if category else 1
+            weight_groups.setdefault(weight, []).append(prayer)
 
-        for _ in range(max_selections):
-            available_lists = [lst for lst in prayer_lists if lst]
-            if not available_lists:
-                break
-            selected_list = random.choices(available_lists, weights[:len(available_lists)], k=1)[0]
-            if selected_list:
-                prayer = random.choice(selected_list)
-                selected_prayers.add(prayer)
-                selected_list.remove(prayer)
+        # Select prayers starting from the specified weight, falling back to lower weights
+        selected_prayers = []
+        remaining_selections = max_selections
+        weight = current_weight
 
-        return list(selected_prayers)
+        while remaining_selections > 0 and weight >= 1:
+            if weight in weight_groups and weight_groups[weight]:
+                # Randomly select from the current weight group
+                available_prayers = weight_groups[weight]
+                num_to_select = min(remaining_selections, len(available_prayers))
+                prayers = random.sample(available_prayers, num_to_select)
+                selected_prayers.extend(prayers)
+                # Update displayed prayers and remove selected prayers from weight group
+                for prayer in prayers:
+                    self.displayed_prayers.add(prayer.prayer)
+                    weight_groups[weight].remove(prayer)
+                remaining_selections -= num_to_select
+            weight -= 1  # Move to the next lower weight group
+
+        return selected_prayers[:max_selections]
 
 class SessionManager:
     """Manages prayer session data, such as streaks and counts."""
@@ -91,14 +108,13 @@ class AppController:
     def run(self):
         """Main application loop."""
         try:
+            self.prayer_selector.reset_session()  # Clear displayed prayers at start
             while self.state_machine.current_state and self.state_machine.current_state.name != "done":
                 state = self.state_machine.current_state
-                if state.auto_trigger == True:
-                    # Auto-trigger states don't display a panel; execute action immediately
+                if state.auto_trigger:
                     action = self.handle_state_action(state)
                     self.state_machine.transition(action)
                 else:
-                    # Display panel and handle user-driven action
                     panel = next((p for p in self.db_manager.panel_manager.panels if p.panel_header == state.name), None)
                     if not panel:
                         raise AppError(f"No panel found for state {state.name}")
@@ -116,7 +132,7 @@ class AppController:
         """Handle the action associated with the current state."""
         try:
             if state.action_event == 'get_continue':
-                response = self.ui_manager.get_response('enter to continue ')
+                response = self.ui_manager.get_response('Press Enter to continue: ')
                 if response == 'import':
                     self.handle_import()
                 elif response == 'export':
@@ -152,28 +168,47 @@ class AppController:
                 another_prayer = False
 
     def get_past_prayers(self):
-        """Display past prayers selected by the PrayerSelector."""
-        prayers = self.prayer_selector.select_past_prayers()
+        """Display past prayers one at a time and allow marking as answered."""
         display_num = self.db_manager.app_params.past_prayer_display_count
-        for i in range(0, len(prayers), display_num):
-            for prayer in prayers[i:i + display_num]:
+        current_weight = 10  # Start with the highest weight
+        continue_displaying = True
+
+        while continue_displaying:
+            prayers = self.prayer_selector.select_past_prayers(max_selections=display_num, current_weight=current_weight)
+            if not prayers:
+                self.ui_manager.display_panel(
+                    Panel(0, "No Past Prayers", [PanelPgraph(0, None, "No unanswered past prayers available.")])
+                )
+                break
+
+            for prayer in prayers:
                 self.ui_manager.display_prayer(prayer)
                 prayer.display_count += 1
                 self.session_manager.current_session.past_prayer_prayed_count += 1
-                response = self.ui_manager.get_response('"answered" or enter to continue ')
-                if response == 'a':
-                    answer, answer_date = self.ui_manager.get_answer(prayer)
-                    prayer.answer = answer
-                    prayer.answer_date = answer_date
+                response = self.ui_manager.get_response(
+                    'How was this prayer answered? (Enter answer or press Enter to skip): '
+                )
+                if response.strip():  # Non-empty response indicates an answer
+                    prayer.answer = response
+                    prayer.answer_date = date.today().strftime("%d-%b-%Y")
                     self.session_manager.current_session.answered_prayer_count += 1
-            if i + display_num < len(prayers):
-                response = self.ui_manager.get_response('enter "more" or "done" ')
-                if response.lower() in ('d', 'done'):
-                    break
+                    # Remove from answered_prayers since it's now answered
+                    if prayer in self.db_manager.prayer_manager.answered_prayers:
+                        self.db_manager.prayer_manager.answered_prayers.remove(prayer)
+
+            if len(prayers) == display_num:
+                response = self.ui_manager.get_response(
+                    f'Display another set of {display_num} prayers? (y/n): '
+                )
+                continue_displaying = response.lower() in ('y', 'yes')
+                current_weight = (current_weight - 1) if current_weight > 1 else 10  # Cycle to next weight
+            else:
+                continue_displaying = False
+
+        return 'get_past_prayers'
 
     def handle_import(self):
         """Placeholder for import logic."""
-        # TODO: Implement import logic
         pass
 
     def quit(self):

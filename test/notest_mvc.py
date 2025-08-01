@@ -87,7 +87,7 @@ def test_app():
 
 def populate_db(session):
 
-    category = Category(category_name='test category 1')
+    category = Category(category_name='test category_name 1')
     session.add(category)
 
     prayer = Prayer(prayer_text='test prayer 1', create_date='2022-01-15',
@@ -105,7 +105,7 @@ def populate_db(session):
 
 
 def get_categories(session):
-    """Get a list of category objects sorted by category name"""
+    """Get a list of category_name objects sorted by category_name name"""
     return (
         session.query(
             Category.category_name,
