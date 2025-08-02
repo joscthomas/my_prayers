@@ -169,7 +169,7 @@ class PrayerManager:
                 prayer=row.prayer,
                 create_date=row.create_date,
                 answer_date=None if pd.isna(row.answer_date) else row.answer_date,
-                category_name=row.category,
+                category=row.category,
                 answer=None if pd.isna(row.answer) else row.answer,
                 display_count=0
             )
@@ -219,7 +219,7 @@ class CategoryManager:
             prayer_categories = set(prayer.category for prayer in self.prayer_manager.answered_prayers)
             unique_categories = [c for c in prayer_categories if c not in json_categories]
             for c in unique_categories:
-                self.categories.append(Category(category_name=c, count=0, weight=1))
+                self.categories.append(Category(category=c, count=0, weight=1))
 
             for category in self.categories:
                 category.category_prayer_list = [

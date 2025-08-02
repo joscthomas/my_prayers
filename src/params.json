@@ -3,7 +3,7 @@
     "id_desc": "reserved for future use",
     "app": "My Prayers",
     "app_desc": "name of the application",
-    "last_panel_set": "20221202",
+    "last_panel_set": "20230101",
     "last_panel_set_desc": "id of panel set last displayed",
     "install_path": ".",
     "install_path_desc": "app install directory path",

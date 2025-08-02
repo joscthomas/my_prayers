@@ -167,7 +167,7 @@ def create_db_tables(db_connection):
     # create_date : date a prayer was created
     # answer_text : the answer to the prayer request
     # answer_date : date a prayer was answered
-    # category_id : points at the category_name name for the prayer
+    # category_id : points at the category name for the prayer
     # display_count : number of times a prayer presented
     # (dates stored as ISO8601 strings : "YYYY-MM-DD HH:MM:SS.SSS"
     sql_string = ('''CREATE TABLE IF NOT EXISTS prayer
@@ -179,20 +179,20 @@ def create_db_tables(db_connection):
         category_id integer,
         display_count integer,
         FOREIGN KEY (category_id)
-        REFERENCES category_name (category_id)
+        REFERENCES category (category_id)
         );''')
     if APP_DEBUG is True:
         logging.debug('prayer : %s', sql_string)
     create_table(db_connection, sql_string)
 
     # category_id : unique identifier set by sqlite
-    # category_name : a category_name of a prayer request
-    sql_string = ('''CREATE TABLE IF NOT EXISTS category_name
+    # category : a category of a prayer request
+    sql_string = ('''CREATE TABLE IF NOT EXISTS category
         (category_id integer PRIMARY KEY,
-        category_name text NOT NULL
+        category text NOT NULL
         );''')
     if APP_DEBUG is True:
-        logging.debug('category_name : %s', sql_string)
+        logging.debug('category : %s', sql_string)
     create_table(db_connection, sql_string)
 
     # message_id : unique identifier (a date string)

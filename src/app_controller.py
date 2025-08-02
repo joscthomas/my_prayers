@@ -5,6 +5,7 @@ import logging
 from datetime import datetime, date
 import random
 from typing import List, Optional
+from datetime import timedelta
 from mpo_model import Prayer, Category, Panel, AppParams, PrayerSession, State, StateMachine, ModelError
 from db_manager import AppDatabase
 from ui_manager import AppDisplay
@@ -25,7 +26,7 @@ class PrayerSelector:
         self.displayed_prayers.clear()
 
     def select_past_prayers(self, max_selections: int, current_weight: int) -> List[Prayer]:
-        """Select unanswered prayers from previous sessions based on category weight."""
+        """Select unanswered prayers from previous sessions, prioritizing lowest display count with random selection."""
         today = date.today().strftime("%d-%b-%Y")
         # Get unanswered prayers from previous sessions
         eligible_prayers = [
@@ -39,27 +40,38 @@ class PrayerSelector:
         # Group prayers by category weight
         weight_groups = {}
         for prayer in eligible_prayers:
-            category = next((cat for cat in self.db_manager.category_manager.categories if cat.category == prayer.category), None)
+            category = next(
+                (cat for cat in self.db_manager.category_manager.categories if cat.category == prayer.category), None)
             weight = category.category_weight if category else 1
             weight_groups.setdefault(weight, []).append(prayer)
 
-        # Select prayers starting from the specified weight, falling back to lower weights
+        # Sort each weight group by display_count and group by display_count
         selected_prayers = []
         remaining_selections = max_selections
         weight = current_weight
 
         while remaining_selections > 0 and weight >= 1:
             if weight in weight_groups and weight_groups[weight]:
-                # Randomly select from the current weight group
-                available_prayers = weight_groups[weight]
-                num_to_select = min(remaining_selections, len(available_prayers))
-                prayers = random.sample(available_prayers, num_to_select)
-                selected_prayers.extend(prayers)
-                # Update displayed prayers and remove selected prayers from weight group
-                for prayer in prayers:
-                    self.displayed_prayers.add(prayer.prayer)
-                    weight_groups[weight].remove(prayer)
-                remaining_selections -= num_to_select
+                # Sort prayers by display_count (ascending)
+                weight_groups[weight].sort(key=lambda p: p.display_count)
+                # Group prayers by display_count
+                display_count_groups = {}
+                for prayer in weight_groups[weight]:
+                    display_count_groups.setdefault(prayer.display_count, []).append(prayer)
+
+                # Select from the lowest display_count group
+                if display_count_groups:
+                    lowest_display_count = min(display_count_groups.keys())
+                    available_prayers = display_count_groups[lowest_display_count]
+                    num_to_select = min(remaining_selections, len(available_prayers))
+                    # Randomly select from prayers with the lowest display_count
+                    prayers = random.sample(available_prayers, num_to_select)
+                    selected_prayers.extend(prayers)
+                    # Update displayed prayers and remove selected prayers from weight group
+                    for prayer in prayers:
+                        self.displayed_prayers.add(prayer.prayer)
+                        weight_groups[weight].remove(prayer)
+                    remaining_selections -= num_to_select
             weight -= 1  # Move to the next lower weight group
 
         return selected_prayers[:max_selections]

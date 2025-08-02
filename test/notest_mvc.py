@@ -53,7 +53,7 @@ def test_app():
     categories = get_categories(session)
     for row in categories:
         logging.debug((
-            f'Category: {row.category_name}, total : {row.total_categories}'
+            f'Category: {row.category}, total : {row.total_categories}'
             )
         )
 
@@ -87,7 +87,7 @@ def test_app():
 
 def populate_db(session):
 
-    category = Category(category_name='test category_name 1')
+    category = Category(category_name='test category 1')
     session.add(category)
 
     prayer = Prayer(prayer_text='test prayer 1', create_date='2022-01-15',
@@ -105,13 +105,13 @@ def populate_db(session):
 
 
 def get_categories(session):
-    """Get a list of category_name objects sorted by category_name name"""
+    """Get a list of category objects sorted by category name"""
     return (
         session.query(
-            Category.category_name,
-            func.count(Category.category_name).label("total_categories")
+            Category.category,
+            func.count(Category.category).label("total_categories")
             )
-        .order_by(Category.category_name).all()
+        .order_by(Category.category).all()
         )
 
 
