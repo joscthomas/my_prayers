@@ -1,3 +1,6 @@
+# ui_manager.py
+# Handles user interface components and presentation logic.
+
 import logging
 from typing import Tuple, Optional
 from datetime import date

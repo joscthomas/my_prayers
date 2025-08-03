@@ -21,7 +21,7 @@
 
 3. File Structure:
    - `mpo_model.py`: Defines core business entities (e.g., classes, data structures) and business rules (specific logic like calculations or validations shared across the application. (backup: https://drive.google.com/file/d/15HzcKOmGFneeFBAoCza5oKBPtWxTbDrJ/view?usp=sharing)
-   - `db_manager.py`: Implements the Model component, handling database operations (e.g., CRUD operations, database connections). Example: Functions to query or update a database using an ORM or raw SQL. (backup: https://drive.google.com/file/d/1f38au2Je2a4PZUhpGLKO9Djl89ypjCRV/view?usp=sharing)
+   - `db_manager.py`: Implements the Model component, handling database operations (e.g., CRUD operations,). Example: Functions to query or update a database using an ORM or raw SQL. (backup: https://drive.google.com/file/d/1f38au2Je2a4PZUhpGLKO9Djl89ypjCRV/view?usp=sharing)
    - `ui_manager.py`: Implements the View component, managing the user interface (e.g., GUI elements via `tkinter`, command-line interface, or other display logic). (backup: https://drive.google.com/file/d/1DJfnsSqHRUeR6W0CaE4HbButfe_aZB0C/view?usp=sharing) 
    - `app_controller.py`: Implements the Controller component, coordinating user inputs, updating the Model, and refreshing the View. (backup: https://drive.google.com/file/d/1DXM6uduXtse3Eg7KglE_4z96KaL18LpU/view?usp=drive_link)
    - Link to Google Drive main directory for my_prayers_project (project root): https://drive.google.com/drive/folders/1CXYdNXyIPJjV6pEe6wuwM-yAJPuLr6kb?usp=sharing

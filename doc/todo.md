@@ -1,10 +1,5 @@
 - ID: T001
-Name: Add validation to Prayer
+Name: Add type hints for UML class diagram
 Type: Enhancement
 Priority: Medium
-Description: Ensure non-empty content in Prayer.__init__.
-- ID: T002
-  Name: Add validation to Prayer
-  Type: Enhancement
-  Priority: Medium
-  Description: Ensure non-empty content in Prayer.__init__.
+Description: Add type hints using Python’s typing module (e.g., List, Optional) to instance variables and method parameters/return types to clarify relationships for PyCharm’s UML diagram. I’ll ensure proper imports, preserve all comments, and follow PEP 8. The goal is to make associations (e.g., AppController → UIManager), dependencies, and compositions (e.g., Prayer → Category) visible in the UML diagram.

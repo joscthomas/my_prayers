@@ -1,5 +1,5 @@
 # db_manager.py
-# Handles loading of data files (JSON, CSV, etc.) for the Model.
+# Handles data management and database interactions.
 
 import pandas as pd
 import pickle

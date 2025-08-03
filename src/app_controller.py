@@ -1,5 +1,5 @@
 # app_controller.py
-# Coordinates between Model (AppDatabase, StateMachine) and View (AppDisplay).
+# Coordinates between Model (db_manager) and View (ui_manager).
 
 import logging
 from datetime import datetime, date
