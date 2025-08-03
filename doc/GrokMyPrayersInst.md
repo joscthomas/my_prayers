@@ -9,7 +9,8 @@
          - Shared Logic: `mpo_model.py` contains business entities and logic shared across the MVC components.
 
 2. Development Environment:
-   - IDE: PyCharm on a Windows operating system.
+   - IDE: PyCharm 2025.1.3.1 (Community Edition)
+   - Windows operating system.
    - Python Version: 3.11
    - Dependencies: TBD (List required libraries or frameworks (e.g., `tkinter` for the UI, `sqlalchemy` for the database, etc.). If none are specified yet, include a note to document dependencies in a `requirements.txt` file.)
    - Setup Instructions:
