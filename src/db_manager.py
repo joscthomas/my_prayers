@@ -257,9 +257,9 @@ class CategoryManager:
 class AppDatabase:
     """Coordinates database operations for the My Prayers application."""
 
-    def __init__(self, pickle_file: str = "objects.pkl", params_file: str = "params.json",
-                 categories_file: str = "categories.json", panels_file: str = "panels.csv",
-                 prayers_file: str = "prayers.csv", states_file: str = "states.json"):
+    def __init__(self, pickle_file: str = "..data/objects.pkl", params_file: str = "..data/params.json",
+                 categories_file: str = "..data/categories.json", panels_file: str = "..data/panels.csv",
+                 prayers_file: str = "..data/prayers.csv", states_file: str = "..data/states.json"):
         self.persistence = PersistenceManager(pickle_file, params_file, categories_file, states_file)
         self.app_params = self._load_params()
         self.prayer_manager = PrayerManager(self.persistence)
