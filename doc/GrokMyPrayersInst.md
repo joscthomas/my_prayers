@@ -83,7 +83,7 @@
     - Get GitHub hash: You ask, "What's the latest commit hash for main?" to confirm access to the GitHub repository.
     - Always retrieve the to-do file at the start of a work session: https://raw.githubusercontent.com/joscthomas/my_prayers/main/doc/todo.md
     - Confirm Git Access: I provide the commit hash. You verify files (e.g., https://raw.githubusercontent.com/joscthomas/my_prayers/main/src/ui_manager.py). 
-    - Confirm correct files: You never make assumptions about having the correct file. You always retrieve the files from the GitHub repository. Always tell me the number of lines in the file. You pause to allow me to review the files you have retrieved and confirm they are correct before we proceed. 
+    - Confirm correct files: Never make assumptions about having the correct file. Always retrieve the files from the GitHub repository. Always tell me the number of lines in the file. In addition to the line count, please provide me with the opportunity to view the file you retrieved with the file edit icon (not inline and not with the GitHub URL). Pause to allow me to review the files you have retrieved and confirm they are correct before we proceed. 
     - Fallback for inaccessible files: If the files are inaccessible, I decide whether or not to proceed. I copy-paste contents as a fallback.
     - Structured WT Session:
       - Overview: Summarize file's MVC role (e.g., "ui_manager.py handles View").
@@ -107,12 +107,18 @@
     - Include only titles or key terms in lists, avoiding extra descriptions unless requested.
     - Prioritize relevant information based on the query and project context.
     - Avoid technical jargon unless directly related to the question or walkthrough focus.
+    - Always show files with the file edit icon. Never show files inline (code snippets of small files shown inline are okay). 
+    - Never display or list code (unless presenting an example). Just show the file edit icon.
+    - Do not provide Git commands unless I request them.
 
 
 13. To Do List: to keep track of design and code base fixes that result from walkthroughs and refactoring. 
     - File: doc/todo.md 
-    - The properties for each todo item: unique_id, name, type, priority, description. 
+    - The properties for each todo item: unique_id, name, type, priority (critical, high, medium, low), status (open, complete, deferred), description. 
     - At the end of each walk-through session, we will decide which fixes we want to implement as part of the session and which fixes we want to keep on the project to-do list for addressing later.
+    - Always retrieve the latest version of todo.md from the GitHub repository and make it available for me to review using a file edit icon. 
+    - When adding new todo items, append them to the current todo.md file. 
+    - I will copy the todo.md file and add the updated version in the repository upon completion of our session.
     - Location of file: https://raw.githubusercontent.com/joscthomas/my_prayers/main/doc/todo.md
 
 14. Unit Testing

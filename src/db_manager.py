@@ -19,12 +19,14 @@ class DatabaseError(Exception):
 class PersistenceManager:
     """Handles file I/O operations for persistence (pickle, JSON, CSV)."""
 
-    def __init__(self, pickle_file: str = "objects.pkl", params_file: str = "params.json",
-                 categories_file: str = "categories.json", states_file: str = "states.json"):
-        self.pickle_file = pickle_file
-        self.params_file = params_file
-        self.categories_file = categories_file
-        self.states_file = states_file
+    def __init__(self, data_dir: str = "../data", pickle_file: str = "objects.pkl",
+                 params_file: str = "params.json", categories_file: str = "categories.json",
+                 states_file: str = "states.json"):
+        self.data_dir = data_dir
+        self.pickle_file = os.path.join(data_dir, pickle_file)
+        self.params_file = os.path.join(data_dir, params_file)
+        self.categories_file = os.path.join(data_dir, categories_file)
+        self.states_file = os.path.join(data_dir, states_file)
 
     def load_pickle(self) -> dict:
         """Load objects from the pickle file."""
@@ -40,6 +42,7 @@ class PersistenceManager:
     def save_pickle(self, objects: dict):
         """Save objects to the pickle file."""
         try:
+            os.makedirs(self.data_dir, exist_ok=True)  # Ensure data directory exists
             with open(self.pickle_file, "wb") as file:
                 pickle.dump(objects, file)
         except Exception as e:
@@ -60,6 +63,7 @@ class PersistenceManager:
     def save_json(self, file_path: str, data: dict):
         """Save data to a JSON file."""
         try:
+            os.makedirs(self.data_dir, exist_ok=True)  # Ensure data directory exists
             with open(file_path, 'w', encoding='utf-8') as file:
                 json.dump(data, file, indent=4)
         except Exception as e:
@@ -102,6 +106,7 @@ class PanelManager:
 
     def load_panels(self, csv_file: str = "panels.csv"):
         """Load panels from CSV and instantiate Panel objects."""
+        csv_file = os.path.join(self.persistence.data_dir, csv_file)
         df = self.persistence.load_csv(csv_file)
         panel_set_id = self._get_panel_set_id(df)
         df_panels = df.loc[df['panel_set'] == int(panel_set_id)]
@@ -163,6 +168,7 @@ class PrayerManager:
 
     def load_prayers(self, csv_file: str = "prayers.csv"):
         """Load prayers from CSV and instantiate Prayer objects."""
+        csv_file = os.path.join(self.persistence.data_dir, csv_file)
         df = self.persistence.load_csv(csv_file)
         for row in df.itertuples():
             prayer = Prayer(
@@ -208,6 +214,7 @@ class CategoryManager:
 
     def load_categories(self, json_file: str = "categories.json"):
         """Load categories from JSON and instantiate Category objects."""
+        json_file = os.path.join(self.persistence.data_dir, json_file)
         try:
             data = self.persistence.load_json(json_file)
             json_categories = []
@@ -257,17 +264,19 @@ class CategoryManager:
 class AppDatabase:
     """Coordinates database operations for the My Prayers application."""
 
-    def __init__(self, pickle_file: str = "..data/objects.pkl", params_file: str = "..data/params.json",
-                 categories_file: str = "..data/categories.json", panels_file: str = "..data/panels.csv",
-                 prayers_file: str = "..data/prayers.csv", states_file: str = "..data/states.json"):
-        self.persistence = PersistenceManager(pickle_file, params_file, categories_file, states_file)
+    def __init__(self, data_dir: str = "../data", pickle_file: str = "objects.pkl",
+                 params_file: str = "params.json", categories_file: str = "categories.json",
+                 panels_file: str = "panels.csv", prayers_file: str = "prayers.csv",
+                 states_file: str = "states.json"):
+        self.persistence = PersistenceManager(data_dir, pickle_file, params_file,
+                                             categories_file, states_file)
         self.app_params = self._load_params()
         self.prayer_manager = PrayerManager(self.persistence)
         self.panel_manager = PanelManager(self.persistence, self.app_params)
         self.category_manager = CategoryManager(self.persistence, self.prayer_manager)
         self.session = PrayerSession()
 
-        if os.path.exists(pickle_file):
+        if os.path.exists(self.persistence.pickle_file):
             self._load_from_pickle()
         else:
             self.panel_manager.load_panels(panels_file)
@@ -287,9 +296,19 @@ class AppDatabase:
             raise
 
     def _load_from_pickle(self):
-        """Load objects from pickle file."""
+        """Load objects from pickle file, fallback to CSV/JSON if missing."""
+        if not os.path.exists(self.persistence.pickle_file):
+            logging.info("Pickle file not found, loading from CSV and JSON")
+            self.prayer_manager.load_prayers("prayers.csv")
+            self.category_manager.load_categories("categories.json")
+            self.panel_manager.load_panels("panels.csv")
+            return
         data = self.persistence.load_pickle()
         if not data:
+            logging.info("Empty pickle file, loading from CSV and JSON")
+            self.prayer_manager.load_prayers("prayers.csv")
+            self.category_manager.load_categories("categories.json")
+            self.panel_manager.load_panels("panels.csv")
             return
         self.prayer_manager.prayers = data.get('Prayer_instances', [])
         logging.info(f"Loaded {len(self.prayer_manager.prayers)} Prayer instances.")

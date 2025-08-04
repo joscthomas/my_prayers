@@ -170,8 +170,9 @@ class AppParams:
     def __init__(self, params_dict: Dict):
         required_keys = [
             'id', 'id_desc', 'app', 'app_desc', 'last_panel_set', 'last_panel_set_desc',
-            'install_path', 'install_path_desc', 'past_prayer_display_count',
-            'past_prayer_display_count_desc', 'prayer_streak', 'prayer_streak_desc',
+            'install_path', 'install_path_desc', 'data_file_path', 'data_file_path_desc',
+            'past_prayer_display_count', 'past_prayer_display_count_desc',
+            'prayer_streak', 'prayer_streak_desc',
             'last_prayer_date', 'last_prayer_date_desc'
         ]
         if not all(key in params_dict for key in required_keys):
@@ -186,6 +187,8 @@ class AppParams:
         self._last_panel_set_desc = params_dict['last_panel_set_desc']
         self._install_path = params_dict['install_path']
         self._install_path_desc = params_dict['install_path_desc']
+        self._data_file_path = params_dict['data_file_path']
+        self._data_file_path_desc = params_dict['data_file_path_desc']
         self._past_prayer_display_count = params_dict['past_prayer_display_count']
         self._past_prayer_display_count_desc = params_dict['past_prayer_display_count_desc']
         self._prayer_streak = params_dict['prayer_streak']
@@ -208,6 +211,10 @@ class AppParams:
     @property
     def install_path(self) -> str:
         return self._install_path
+
+    @property
+    def data_file_path(self) -> str:
+        return self._data_file_path
 
     @property
     def past_prayer_display_count(self) -> int:
