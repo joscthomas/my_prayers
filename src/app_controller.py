@@ -79,24 +79,23 @@ class PrayerSelector:
 class SessionManager:
     """Manages prayer session data, such as streaks and counts."""
 
-    def __init__(self, app_params: AppParams):
-        self.app_params = app_params
-        self.current_session = PrayerSession()
+    def __init__(self, session: PrayerSession):
+        self.session = session
         self.update_streak()
 
     def update_streak(self):
         """Update the prayer streak based on the last prayer date."""
         current_date = datetime.now()
         try:
-            last_prayer_date = datetime.strptime(self.app_params.last_prayer_date, '%d-%b-%Y')
+            last_prayer_date = datetime.strptime(self.session.last_prayer_date, '%d-%b-%Y')
             yesterday = current_date - timedelta(days=1)
             if yesterday.date() == last_prayer_date.date():
-                self.app_params.prayer_streak += 1
+                self.session.prayer_streak += 1
             else:
-                self.app_params.prayer_streak = 1
-        except ValueError:
-            self.app_params.prayer_streak = 1
-        self.app_params.last_prayer_date = current_date.strftime('%d-%b-%Y')
+                self.session.prayer_streak = 1
+        except (ValueError, TypeError):
+            self.session.prayer_streak = 1
+        self.session.last_prayer_date = current_date.strftime('%d-%b-%Y')
 
 class AppController:
     """Coordinates interactions between UI, database, and other components."""
@@ -106,7 +105,7 @@ class AppController:
         self.ui_manager = AppDisplay()
         self.state_machine = self._initialize_state_machine()
         self.prayer_selector = PrayerSelector(self.db_manager)
-        self.session_manager = SessionManager(self.db_manager.app_params)
+        self.session_manager = SessionManager(self.db_manager.session)
 
     def _initialize_state_machine(self) -> StateMachine:
         """Initialize the state machine with data from AppDatabase."""
@@ -171,7 +170,7 @@ class AppController:
             if another_prayer and prayer is not None:
                 try:
                     self.db_manager.create_prayer(prayer)
-                    self.session_manager.current_session.new_prayer_added_count += 1
+                    self.session_manager.session.new_prayer_added_count += 1
                 except Exception as e:
                     logging.error(f"Failed to create prayer: {e}")
                     raise AppError(f"Error saving prayer: {e}")
@@ -196,14 +195,14 @@ class AppController:
             for prayer in prayers:
                 self.ui_manager.display_prayer(prayer)
                 prayer.display_count += 1
-                self.session_manager.current_session.past_prayer_prayed_count += 1
+                self.session_manager.session.past_prayer_prayed_count += 1
                 response = self.ui_manager.get_response(
                     'How was this prayer answered? (Enter answer or press Enter to skip): '
                 )
                 if response.strip():  # Non-empty response indicates an answer
                     prayer.answer = response
                     prayer.answer_date = date.today().strftime("%d-%b-%Y")
-                    self.session_manager.current_session.answered_prayer_count += 1
+                    self.session_manager.session.answered_prayer_count += 1
                     # Remove from answered_prayers since it's now answered
                     if prayer in self.db_manager.prayer_manager.answered_prayers:
                         self.db_manager.prayer_manager.answered_prayers.remove(prayer)

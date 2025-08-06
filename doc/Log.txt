@@ -1,0 +1,168 @@
+"C:\Users\jcthomas\Documents\JCT Documents\Python\my_prayers_project\venv\Scripts\python.exe" "C:\Users\jcthomas\Documents\JCT Documents\Python\my_prayers_project\src\app_controller.py"
+INFO:root:Loaded 5 panels from ../data\panels.csv
+INFO:root:AppDisplay initialized
+
+WELCOME
+
+God is near.
+
+
+Ask Him to meet you where you are, and trust Him with your thoughts and
+feelings.
+
+
+Press Enter to continue:
+
+HONOR GOD
+
+I will praise the Lord at all times. I will constantly speak his praises. I will
+boast only in the Lord; let all who are helpless take heart. Come, let us tell
+of the Lord's greatness; let us exalt his name together.
+
+Psalms 34:1-3 NLT
+
+Consider what it means to bless God at all times.
+
+
+After you've done this, spend some time praising the name of the Lord right now.
+
+
+Press Enter to continue: DEBUG:root:User input:
+
+DEBUG:root:User input:
+
+MY CONCERNS
+
+I look up to the mountains— does my help come from there? My help comes from the
+Lord, who made heaven and earth!
+
+Psalms 121:1-2 NLT
+
+Sit with this verse for a few minutes. Then, talk to God and let Him know where
+you need help.
+
+
+Enter prayer request (or return if done)
+Wed prayer 3
+Category?
+me
+Enter prayer request (or return if done)
+INFO:root:New prayer created: Wed prayer 3 (Category: me)
+INFO:root:Created prayer: Wed prayer 3
+Wed prayer 4
+Category?
+me
+INFO:root:New prayer created: Wed prayer 4 (Category: me)
+INFO:root:Created prayer: Wed prayer 4
+Enter prayer request (or return if done)
+
+DEBUG:root:No prayer entered, ending prayer input
+DEBUG:root:Displayed prayer: Quickly repair damage to the camper van 27-Jan-2023 us
+
+Quickly repair damage to the camper van
+
+How was this prayer answered? (Enter answer or press Enter to skip):
+
+Schedule time for dance practice with Robin
+
+How was this prayer answered? (Enter answer or press Enter to skip): DEBUG:root:User input:
+DEBUG:root:Displayed prayer: Schedule time for dance practice with Robin 04-Feb-2023 us
+
+DEBUG:root:User input:
+DEBUG:root:Displayed prayer: Preparation for our trip to Europe. Tech, everything that we bring, all our plans. 31-Mar-2023 us
+
+Preparation for our trip to Europe. Tech, everything that we bring, all our
+plans.
+
+How was this prayer answered? (Enter answer or press Enter to skip):
+Display another set of 3 prayers? (y/n): DEBUG:root:User input:
+n
+DEBUG:root:User input: n
+ERROR:root:Application error: No panel found for state GOD'S WILL
+INFO:root:Session validation: new_prayer_added_count=2, past_prayer_prayed_count=0
+WARNING:root:No past prayers prayed in session
+INFO:root:Closing UI
+
+Process finished with exit code 0
+
+-----------------------
+
+"C:\Users\jcthomas\Documents\JCT Documents\Python\my_prayers_project\venv\Scripts\python.exe" "C:\Users\jcthomas\Documents\JCT Documents\Python\my_prayers_project\src\app_controller.py"
+INFO:root:Loaded 1075 Prayer instances.
+INFO:root:Loaded 1075 Prayer instances.
+INFO:root:Computed 173 unanswered Prayer instances.
+INFO:root:Loaded 9 Category instances.
+INFO:root:Loaded 1 Session instances.
+INFO:root:Loaded 5 panels from ../data\panels.csv
+INFO:root:AppDisplay initialized
+
+WELCOME
+
+God is near.
+
+
+Ask Him to meet you where you are, and trust Him with your thoughts and
+feelings.
+
+
+Press Enter to continue:
+
+
+HONOR GOD
+
+I will praise the Lord at all times. I will constantly speak his praises. I will
+boast only in the Lord; let all who are helpless take heart. Come, let us tell
+of the Lord's greatness; let us exalt his name together.
+
+Psalms 34:1-3 NLT
+
+Consider what it means to bless God at all times.
+
+
+After you've done this, spend some time praising the name of the Lord right now.
+
+
+Press Enter to continue:
+MY CONCERNS
+
+I look up to the mountains— does my help come from there? My help comes from the
+Lord, who made heaven and earth!
+
+Psalms 121:1-2 NLT
+
+Sit with this verse for a few minutes. Then, talk to God and let Him know where
+you need help.
+
+
+Enter prayer request (or return if done)
+DEBUG:root:User input:
+DEBUG:root:User input:
+
+
+DEBUG:root:No prayer entered, ending prayer input
+DEBUG:root:Displayed prayer: Go visit artist Lauri K to purchase art work 13-Mar-2023 us
+DEBUG:root:User input:
+DEBUG:root:Displayed prayer: Parts for the camper van arrive and repairs completed quickly 04-Mar-2023 us
+
+Go visit artist Lauri K to purchase art work
+
+How was this prayer answered? (Enter answer or press Enter to skip):
+Parts for the camper van arrive and repairs completed quickly
+
+How was this prayer answered? (Enter answer or press Enter to skip):
+
+Visit Kim?
+
+How was this prayer answered? (Enter answer or press Enter to skip): DEBUG:root:User input:
+DEBUG:root:Displayed prayer: Visit Kim? 27-Jan-2023 us
+
+Display another set of 3 prayers? (y/n): DEBUG:root:User input:
+
+DEBUG:root:User input:
+ERROR:root:Application error: No panel found for state GOD'S WILL
+INFO:root:Session validation: new_prayer_added_count=2, past_prayer_prayed_count=0
+WARNING:root:No past prayers prayed in session
+INFO:root:Closing UI
+
+Process finished with exit code 0
+

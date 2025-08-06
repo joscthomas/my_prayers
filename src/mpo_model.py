@@ -15,7 +15,7 @@ class Prayer:
     """Represents a prayer in the My Prayers application."""
 
     def __init__(self, prayer: str, create_date: Optional[str] = None, answer_date: Optional[str] = None,
-                 category: str = "General", answer: Optional[str] = None, display_count: int = 0):
+                 category: str = "Other", answer: Optional[str] = None, display_count: int = 0):
         if not prayer:
             raise ModelError("Prayer text cannot be empty")
         if category is None:
@@ -169,11 +169,9 @@ class AppParams:
 
     def __init__(self, params_dict: Dict):
         required_keys = [
-            'id', 'id_desc', 'app', 'app_desc', 'last_panel_set', 'last_panel_set_desc',
+            'id', 'id_desc', 'app', 'app_desc',
             'install_path', 'install_path_desc', 'data_file_path', 'data_file_path_desc',
-            'past_prayer_display_count', 'past_prayer_display_count_desc',
-            'prayer_streak', 'prayer_streak_desc',
-            'last_prayer_date', 'last_prayer_date_desc'
+            'past_prayer_display_count', 'past_prayer_display_count_desc'
         ]
         if not all(key in params_dict for key in required_keys):
             missing = [key for key in required_keys if key not in params_dict]
@@ -183,30 +181,16 @@ class AppParams:
         self._id_desc = params_dict['id_desc']
         self._app = params_dict['app']
         self._app_desc = params_dict['app_desc']
-        self._last_panel_set = params_dict['last_panel_set']
-        self._last_panel_set_desc = params_dict['last_panel_set_desc']
         self._install_path = params_dict['install_path']
         self._install_path_desc = params_dict['install_path_desc']
         self._data_file_path = params_dict['data_file_path']
         self._data_file_path_desc = params_dict['data_file_path_desc']
         self._past_prayer_display_count = params_dict['past_prayer_display_count']
         self._past_prayer_display_count_desc = params_dict['past_prayer_display_count_desc']
-        self._prayer_streak = params_dict['prayer_streak']
-        self._prayer_streak_desc = params_dict['prayer_streak_desc']
-        self._last_prayer_date = params_dict['last_prayer_date']
-        self._last_prayer_date_desc = params_dict['last_prayer_date_desc']
 
     @property
     def id(self) -> str:
         return self._id
-
-    @property
-    def last_panel_set(self) -> str:
-        return self._last_panel_set
-
-    @last_panel_set.setter
-    def last_panel_set(self, value: str):
-        self._last_panel_set = value
 
     @property
     def install_path(self) -> str:
@@ -220,24 +204,6 @@ class AppParams:
     def past_prayer_display_count(self) -> int:
         return self._past_prayer_display_count
 
-    @property
-    def prayer_streak(self) -> int:
-        return self._prayer_streak
-
-    @prayer_streak.setter
-    def prayer_streak(self, value: int):
-        if value < 0:
-            raise ModelError("Prayer streak cannot be negative")
-        self._prayer_streak = value
-
-    @property
-    def last_prayer_date(self) -> str:
-        return self._last_prayer_date
-
-    @last_prayer_date.setter
-    def last_prayer_date(self, value: str):
-        self._last_prayer_date = value
-
 
 class PrayerSession:
     """Tracks details about a prayer session."""
@@ -247,6 +213,9 @@ class PrayerSession:
         self._new_prayer_added_count = 0
         self._past_prayer_prayed_count = 0
         self._answered_prayer_count = 0
+        self._last_prayer_date = None  # Added to store last prayer date
+        self._prayer_streak = 0  # Added to store prayer streak
+        self._last_panel_set = None  # Added to store last panel set
 
     @property
     def session_date(self) -> str:
@@ -281,6 +250,32 @@ class PrayerSession:
         if value < 0:
             raise ModelError("Answered prayer count cannot be negative")
         self._answered_prayer_count = value
+
+    @property
+    def last_prayer_date(self) -> Optional[str]:
+        return self._last_prayer_date
+
+    @last_prayer_date.setter
+    def last_prayer_date(self, value: Optional[str]):
+        self._last_prayer_date = value
+
+    @property
+    def prayer_streak(self) -> int:
+        return self._prayer_streak
+
+    @prayer_streak.setter
+    def prayer_streak(self, value: int):
+        if value < 0:
+            raise ModelError("Prayer streak cannot be negative")
+        self._prayer_streak = value
+
+    @property
+    def last_panel_set(self) -> Optional[str]:
+        return self._last_panel_set
+
+    @last_panel_set.setter
+    def last_panel_set(self, value: Optional[str]):
+        self._last_panel_set = value
 
 
 class State:

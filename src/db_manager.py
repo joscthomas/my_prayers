@@ -6,7 +6,7 @@ import pickle
 import json
 import os
 import random
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Optional, Dict
 import logging
 
@@ -134,14 +134,18 @@ class PanelManager:
 
     def _get_panel_set_id(self, df: pd.DataFrame) -> int:
         """Get the next panel set ID for the prayer session."""
-        last_panel_set = int(self.app_params.last_panel_set or 1)
-        try:
-            next_panel_set_row = df[df.panel_set > last_panel_set].iloc[0]
-        except IndexError:
-            next_panel_set_row = df[df.panel_set > 1].iloc[0]
-        panel_set_id = next_panel_set_row.panel_set
-        self.app_params.last_panel_set = str(panel_set_id)
-        return panel_set_id
+        last_panel_set = int(self.app_params.session.last_panel_set or 1)
+        available_panel_sets = sorted(df['panel_set'].unique())
+        if not available_panel_sets:
+            raise DatabaseError("No panel sets found in CSV")
+        # Find the next panel set
+        for panel_set in available_panel_sets:
+            if panel_set > last_panel_set:
+                self.app_params.session.last_panel_set = str(panel_set)
+                return panel_set
+        # If no higher panel set, cycle to the lowest
+        self.app_params.session.last_panel_set = str(min(available_panel_sets))
+        return min(available_panel_sets)
 
     def validate(self) -> bool:
         """Validate loaded panels."""
@@ -272,7 +276,7 @@ class AppDatabase:
                                              categories_file, states_file)
         self.app_params = self._load_params()
         self.prayer_manager = PrayerManager(self.persistence)
-        self.panel_manager = PanelManager(self.persistence, self.app_params)
+        self.panel_manager = PanelManager(self.persistence, self)
         self.category_manager = CategoryManager(self.persistence, self.prayer_manager)
         self.session = PrayerSession()
 
@@ -302,6 +306,7 @@ class AppDatabase:
             self.prayer_manager.load_prayers("prayers.csv")
             self.category_manager.load_categories("categories.json")
             self.panel_manager.load_panels("panels.csv")
+            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)  # Initialize with defaults
             return
         data = self.persistence.load_pickle()
         if not data:
@@ -309,11 +314,17 @@ class AppDatabase:
             self.prayer_manager.load_prayers("prayers.csv")
             self.category_manager.load_categories("categories.json")
             self.panel_manager.load_panels("panels.csv")
+            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)  # Initialize with defaults
             return
         self.prayer_manager.prayers = data.get('Prayer_instances', [])
+        # Validate Prayer objects
+        for prayer in self.prayer_manager.prayers:
+            if not hasattr(prayer, '_category'):
+                logging.error(f"Invalid Prayer object missing _category: {prayer}")
+                raise DatabaseError("Loaded Prayer object missing _category attribute")
         logging.info(f"Loaded {len(self.prayer_manager.prayers)} Prayer instances.")
-        # Recompute answered_prayers from prayers
-        self.prayer_manager.answered_prayers = [prayer for prayer in self.prayer_manager.prayers if prayer.answer_date is None]
+        self.prayer_manager.answered_prayers = [prayer for prayer in self.prayer_manager.prayers if
+                                               prayer.answer_date is None]
         logging.info(f"Computed {len(self.prayer_manager.answered_prayers)} unanswered Prayer instances.")
         self.category_manager.categories = data.get('Category_instances', [])
         logging.info(f"Loaded {len(self.category_manager.categories)} Category instances.")
@@ -321,6 +332,8 @@ class AppDatabase:
         logging.info(f"Loaded {len(sessions)} Session instances.")
         if sessions:
             self.session = sessions[-1]
+        else:
+            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)  # Initialize with defaults
         # Panels are loaded from CSV, not pickle
         self.panel_manager.load_panels()
 
@@ -337,7 +350,11 @@ class AppDatabase:
     def close(self):
         """Persist all data to files."""
         if not self._validate_session():
-            raise DatabaseError("Session validation failed at close")
+            raise DatabaseError("Session validation failed")
+
+        # Update PrayerSession with last_prayer_date, prayer_streak, and last_panel_set
+        self.session.last_prayer_date = date.today().strftime("%d-%b-%Y")
+        self.session.prayer_streak = self.session.prayer_streak + 1 if self.session.prayer_streak else 1
 
         objects_to_pickle = {
             'Prayer_instances': self.prayer_manager.prayers,
@@ -358,21 +375,18 @@ class AppDatabase:
         }
         self.persistence.save_json(self.persistence.categories_file, categories_data)
 
+        # Save AppParams without last_panel_set, prayer_streak, last_prayer_date
         params_data = {
-            'id': self.app_params._id,
+            'id': self.app_params.id,
             'id_desc': self.app_params._id_desc,
             'app': self.app_params._app,
             'app_desc': self.app_params._app_desc,
-            'last_panel_set': self.app_params._last_panel_set,
-            'last_panel_set_desc': self.app_params._last_panel_set_desc,
-            'install_path': self.app_params._install_path,
+            'install_path': self.app_params.install_path,
             'install_path_desc': self.app_params._install_path_desc,
-            'past_prayer_display_count': self.app_params._past_prayer_display_count,
-            'past_prayer_display_count_desc': self.app_params._past_prayer_display_count_desc,
-            'prayer_streak': self.app_params._prayer_streak,
-            'prayer_streak_desc': self.app_params._prayer_streak_desc,
-            'last_prayer_date': self.app_params._last_prayer_date,
-            'last_prayer_date_desc': self.app_params._last_prayer_date_desc
+            'data_file_path': self.app_params.data_file_path,
+            'data_file_path_desc': self.app_params._data_file_path_desc,
+            'past_prayer_display_count': self.app_params.past_prayer_display_count,
+            'past_prayer_display_count_desc': self.app_params._past_prayer_display_count_desc
         }
         self.persistence.save_json(self.persistence.params_file, params_data)
 
