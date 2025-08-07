@@ -4,9 +4,9 @@
 import logging
 from datetime import datetime, date
 import random
-from typing import List, Optional
+from typing import List, Optional, Set
 from datetime import timedelta
-from mpo_model import Prayer, Category, Panel, AppParams, PrayerSession, State, StateMachine, ModelError
+from mpo_model import Prayer, Category, Panel, AppParams, PrayerSession, State, StateMachine, ModelError, PanelPgraph
 from db_manager import AppDatabase
 from ui_manager import AppDisplay
 
@@ -18,15 +18,16 @@ class PrayerSelector:
     """Handles selection and filtering of prayers for display."""
 
     def __init__(self, db_manager: AppDatabase):
-        self.db_manager = db_manager
-        self.displayed_prayers: set = set()  # Track prayers displayed in this session
+        self.db_manager: AppDatabase = db_manager
+        self.displayed_prayers: Set[str] = set()  # Track prayers displayed in this session
 
-    def reset_session(self):
+    def reset_session(self) -> None:
         """Reset displayed prayers for a new session."""
         self.displayed_prayers.clear()
 
     def select_past_prayers(self, max_selections: int, current_weight: int) -> List[Prayer]:
-        """Select unanswered prayers from previous sessions, prioritizing lowest display count with random selection."""
+        """Select unanswered prayers from previous sessions,
+        prioritizing the lowest display count with random selection."""
         today = date.today().strftime("%d-%b-%Y")
         # Get unanswered prayers from previous sessions
         eligible_prayers = [
@@ -67,7 +68,7 @@ class PrayerSelector:
                     # Randomly select from prayers with the lowest display_count
                     prayers = random.sample(available_prayers, num_to_select)
                     selected_prayers.extend(prayers)
-                    # Update displayed prayers and remove selected prayers from weight group
+                    # Update displayed prayers count; remove selected prayers from weight group
                     for prayer in prayers:
                         self.displayed_prayers.add(prayer.prayer)
                         weight_groups[weight].remove(prayer)
@@ -80,10 +81,10 @@ class SessionManager:
     """Manages prayer session data, such as streaks and counts."""
 
     def __init__(self, session: PrayerSession):
-        self.session = session
+        self.session: PrayerSession = session
         self.update_streak()
 
-    def update_streak(self):
+    def update_streak(self) -> None:
         """Update the prayer streak based on the last prayer date."""
         current_date = datetime.now()
         try:
@@ -101,11 +102,11 @@ class AppController:
     """Coordinates interactions between UI, database, and other components."""
 
     def __init__(self, states_file: str = "states.json"):
-        self.db_manager = AppDatabase(states_file=states_file)
-        self.ui_manager = AppDisplay()
-        self.state_machine = self._initialize_state_machine()
-        self.prayer_selector = PrayerSelector(self.db_manager)
-        self.session_manager = SessionManager(self.db_manager.session)
+        self.db_manager: AppDatabase = AppDatabase(states_file=states_file)
+        self.ui_manager: AppDisplay = AppDisplay()
+        self.state_machine: StateMachine = self._initialize_state_machine()
+        self.prayer_selector: PrayerSelector = PrayerSelector(self.db_manager)
+        self.session_manager: SessionManager = SessionManager(self.db_manager.session)
 
     def _initialize_state_machine(self) -> StateMachine:
         """Initialize the state machine with data from AppDatabase."""
@@ -116,7 +117,7 @@ class AppController:
             logging.error(f"Failed to initialize state machine: {e}")
             raise AppError(f"Failed to initialize state machine: {e}")
 
-    def run(self):
+    def run(self) -> None:
         """Main application loop."""
         try:
             self.prayer_selector.reset_session()  # Clear displayed prayers at start
@@ -162,7 +163,7 @@ class AppController:
         except Exception as e:
             raise AppError(f"Error handling state {state.name}: {e}")
 
-    def get_new_prayers(self):
+    def get_new_prayers(self) -> None:
         """Collect new prayers from the UI and save them to the database."""
         another_prayer = True
         while another_prayer:
@@ -178,7 +179,7 @@ class AppController:
                 logging.warning("Received None prayer from ui_get_new_prayer")
                 another_prayer = False
 
-    def get_past_prayers(self):
+    def get_past_prayers(self) -> str:
         """Display past prayers one at a time and allow marking as answered."""
         display_num = self.db_manager.app_params.past_prayer_display_count
         current_weight = 10  # Start with the highest weight
@@ -195,6 +196,12 @@ class AppController:
             for prayer in prayers:
                 self.ui_manager.display_prayer(prayer)
                 prayer.display_count += 1
+                # Increment category_display_count for the prayer's category
+                for category in self.db_manager.category_manager.categories:
+                    if category.category == prayer.category:
+                        category.category_display_count += 1
+                        logging.debug(f"Incremented category_display_count for {category.category}")
+                        break
                 self.session_manager.session.past_prayer_prayed_count += 1
                 response = self.ui_manager.get_response(
                     'How was this prayer answered? (Enter answer or press Enter to skip): '
@@ -218,11 +225,11 @@ class AppController:
 
         return 'get_past_prayers'
 
-    def handle_import(self):
+    def handle_import(self) -> None:
         """Placeholder for import logic."""
         pass
 
-    def quit(self):
+    def quit(self) -> None:
         """Clean up and exit the application."""
         self.db_manager.close()
         self.ui_manager.close_ui()

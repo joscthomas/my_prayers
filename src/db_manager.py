@@ -22,13 +22,13 @@ class PersistenceManager:
     def __init__(self, data_dir: str = "../data", pickle_file: str = "objects.pkl",
                  params_file: str = "params.json", categories_file: str = "categories.json",
                  states_file: str = "states.json"):
-        self.data_dir = data_dir
-        self.pickle_file = os.path.join(data_dir, pickle_file)
-        self.params_file = os.path.join(data_dir, params_file)
-        self.categories_file = os.path.join(data_dir, categories_file)
-        self.states_file = os.path.join(data_dir, states_file)
+        self.data_dir: str = data_dir
+        self.pickle_file: str = os.path.join(data_dir, pickle_file)
+        self.params_file: str = os.path.join(data_dir, params_file)
+        self.categories_file: str = os.path.join(data_dir, categories_file)
+        self.states_file: str = os.path.join(data_dir, states_file)
 
-    def load_pickle(self) -> dict:
+    def load_pickle(self) -> Dict:
         """Load objects from the pickle file."""
         try:
             if not os.path.exists(self.pickle_file):
@@ -39,7 +39,7 @@ class PersistenceManager:
             logging.error(f"Failed to unpickle {self.pickle_file}: {e}")
             raise DatabaseError(f"Failed to load pickle file: {e}")
 
-    def save_pickle(self, objects: dict):
+    def save_pickle(self, objects: Dict) -> None:
         """Save objects to the pickle file."""
         try:
             os.makedirs(self.data_dir, exist_ok=True)  # Ensure data directory exists
@@ -49,7 +49,7 @@ class PersistenceManager:
             logging.error(f"Failed to save pickle file {self.pickle_file}: {e}")
             raise DatabaseError(f"Failed to save pickle file: {e}")
 
-    def load_json(self, file_path: str) -> dict:
+    def load_json(self, file_path: str) -> Dict:
         """Load data from a JSON file."""
         try:
             if not os.path.exists(file_path):
@@ -60,7 +60,7 @@ class PersistenceManager:
             logging.error(f"Failed to parse JSON file {file_path}: {e}")
             raise DatabaseError(f"Failed to parse JSON file: {e}")
 
-    def save_json(self, file_path: str, data: dict):
+    def save_json(self, file_path: str, data: Dict) -> None:
         """Save data to a JSON file."""
         try:
             os.makedirs(self.data_dir, exist_ok=True)  # Ensure data directory exists
@@ -99,12 +99,13 @@ class PersistenceManager:
 class PanelManager:
     """Manages loading and validation of Panel and PanelPgraph objects."""
 
-    def __init__(self, persistence: PersistenceManager, app_params: AppParams):
-        self.persistence = persistence
-        self.app_params = app_params
+    def __init__(self, persistence: PersistenceManager, app_database: 'AppDatabase'):
+        self.persistence: PersistenceManager = persistence
+        self.app_params: AppParams = app_database.app_params
+        self.session: PrayerSession = app_database.session
         self.panels: List[Panel] = []
 
-    def load_panels(self, csv_file: str = "panels.csv"):
+    def load_panels(self, csv_file: str = "panels.csv") -> None:
         """Load panels from CSV and instantiate Panel objects."""
         csv_file = os.path.join(self.persistence.data_dir, csv_file)
         df = self.persistence.load_csv(csv_file)
@@ -134,17 +135,17 @@ class PanelManager:
 
     def _get_panel_set_id(self, df: pd.DataFrame) -> int:
         """Get the next panel set ID for the prayer session."""
-        last_panel_set = int(self.app_params.session.last_panel_set or 1)
+        last_panel_set = int(self.session.last_panel_set or 1)
         available_panel_sets = sorted(df['panel_set'].unique())
         if not available_panel_sets:
             raise DatabaseError("No panel sets found in CSV")
         # Find the next panel set
         for panel_set in available_panel_sets:
             if panel_set > last_panel_set:
-                self.app_params.session.last_panel_set = str(panel_set)
+                self.session.last_panel_set = str(panel_set)
                 return panel_set
         # If no higher panel set, cycle to the lowest
-        self.app_params.session.last_panel_set = str(min(available_panel_sets))
+        self.session.last_panel_set = str(min(available_panel_sets))
         return min(available_panel_sets)
 
     def validate(self) -> bool:
@@ -166,28 +167,38 @@ class PrayerManager:
     """Manages loading, creation, and validation of Prayer objects."""
 
     def __init__(self, persistence: PersistenceManager):
-        self.persistence = persistence
+        self.persistence: PersistenceManager = persistence
         self.prayers: List[Prayer] = []
         self.answered_prayers: List[Prayer] = []
 
-    def load_prayers(self, csv_file: str = "prayers.csv"):
+    def load_prayers(self, csv_file: str = "prayers.csv") -> None:
         """Load prayers from CSV and instantiate Prayer objects."""
         csv_file = os.path.join(self.persistence.data_dir, csv_file)
         df = self.persistence.load_csv(csv_file)
         for row in df.itertuples():
+            # Read display_count from CSV if available, default to 0 if missing or invalid
+            display_count = 0
+            if hasattr(row, 'display_count') and not pd.isna(row.display_count):
+                try:
+                    display_count = int(row.display_count)
+                    if display_count < 0:
+                        display_count = 0
+                        logging.warning(f"Invalid display_count {row.display_count} for prayer '{row.prayer}', setting to 0")
+                except (ValueError, TypeError):
+                    logging.warning(f"Invalid display_count {row.display_count} for prayer '{row.prayer}', setting to 0")
             prayer = Prayer(
                 prayer=row.prayer,
                 create_date=row.create_date,
                 answer_date=None if pd.isna(row.answer_date) else row.answer_date,
                 category=row.category,
                 answer=None if pd.isna(row.answer) else row.answer,
-                display_count=0
+                display_count=display_count
             )
             self.prayers.append(prayer)
             if prayer.answer_date is None:
                 self.answered_prayers.append(prayer)
 
-    def create_prayer(self, prayer: Prayer):
+    def create_prayer(self, prayer: Prayer) -> None:
         """Add a new prayer to the in-memory database."""
         if not isinstance(prayer, Prayer):
             raise DatabaseError(f"Invalid prayer object: {prayer}")
@@ -211,19 +222,19 @@ class CategoryManager:
     """Manages loading, weighting, and validation of Category objects."""
 
     def __init__(self, persistence: PersistenceManager, prayer_manager: PrayerManager):
-        self.persistence = persistence
-        self.prayer_manager = prayer_manager
+        self.persistence: PersistenceManager = persistence
+        self.prayer_manager: PrayerManager = prayer_manager
         self.categories: List[Category] = []
         self.weighted_categories: List[Category] = []
 
-    def load_categories(self, json_file: str = "categories.json"):
+    def load_categories(self, json_file: str = "categories.json") -> None:
         """Load categories from JSON and instantiate Category objects."""
         json_file = os.path.join(self.persistence.data_dir, json_file)
         try:
             data = self.persistence.load_json(json_file)
             json_categories = []
             for c in data.get('categories', []):
-                category = Category(c['name'], c['display_count'], c['weight'])
+                category = Category(c['name'], count=0, weight=c['weight'])  # Set count to 0
                 self.categories.append(category)
                 json_categories.append(c['name'])
 
@@ -272,13 +283,13 @@ class AppDatabase:
                  params_file: str = "params.json", categories_file: str = "categories.json",
                  panels_file: str = "panels.csv", prayers_file: str = "prayers.csv",
                  states_file: str = "states.json"):
-        self.persistence = PersistenceManager(data_dir, pickle_file, params_file,
+        self.persistence: PersistenceManager = PersistenceManager(data_dir, pickle_file, params_file,
                                              categories_file, states_file)
-        self.app_params = self._load_params()
-        self.prayer_manager = PrayerManager(self.persistence)
-        self.panel_manager = PanelManager(self.persistence, self)
-        self.category_manager = CategoryManager(self.persistence, self.prayer_manager)
-        self.session = PrayerSession()
+        self.app_params: AppParams = self._load_params()
+        self.prayer_manager: PrayerManager = PrayerManager(self.persistence)
+        self.panel_manager: PanelManager = PanelManager(self.persistence, self)
+        self.category_manager: CategoryManager = CategoryManager(self.persistence, self.prayer_manager)
+        self.session: PrayerSession = PrayerSession()
 
         if os.path.exists(self.persistence.pickle_file):
             self._load_from_pickle()
@@ -299,7 +310,7 @@ class AppDatabase:
             logging.error(f"Failed to load parameters: {e}")
             raise
 
-    def _load_from_pickle(self):
+    def _load_from_pickle(self) -> None:
         """Load objects from pickle file, fallback to CSV/JSON if missing."""
         if not os.path.exists(self.persistence.pickle_file):
             logging.info("Pickle file not found, loading from CSV and JSON")
@@ -337,17 +348,17 @@ class AppDatabase:
         # Panels are loaded from CSV, not pickle
         self.panel_manager.load_panels()
 
-    def create_prayer(self, prayer: Prayer):
+    def create_prayer(self, prayer: Prayer) -> None:
         """Add a new prayer to the database."""
         self.prayer_manager.create_prayer(prayer)
         self.session.new_prayer_added_count += 1
 
-    def export(self):
+    def export(self) -> None:
         """Export prayers and panels to CSV (placeholder)."""
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         logging.info(f"Exporting database with timestamp {timestamp}")
 
-    def close(self):
+    def close(self) -> None:
         """Persist all data to files."""
         if not self._validate_session():
             raise DatabaseError("Session validation failed")
@@ -367,7 +378,6 @@ class AppDatabase:
             "categories": [
                 {
                     "name": category.category,
-                    "display_count": category.category_display_count,
                     "weight": category.category_weight
                 }
                 for category in self.category_manager.categories
@@ -378,15 +388,15 @@ class AppDatabase:
         # Save AppParams without last_panel_set, prayer_streak, last_prayer_date
         params_data = {
             'id': self.app_params.id,
-            'id_desc': self.app_params._id_desc,
-            'app': self.app_params._app,
-            'app_desc': self.app_params._app_desc,
+            'id_desc': self.app_params.id_desc,
+            'app': self.app_params.app,
+            'app_desc': self.app_params.app_desc,
             'install_path': self.app_params.install_path,
-            'install_path_desc': self.app_params._install_path_desc,
+            'install_path_desc': self.app_params.install_path_desc,
             'data_file_path': self.app_params.data_file_path,
-            'data_file_path_desc': self.app_params._data_file_path_desc,
+            'data_file_path_desc': self.app_params.data_file_path_desc,
             'past_prayer_display_count': self.app_params.past_prayer_display_count,
-            'past_prayer_display_count_desc': self.app_params._past_prayer_display_count_desc
+            'past_prayer_display_count_desc': self.app_params.past_prayer_display_count_desc
         }
         self.persistence.save_json(self.persistence.params_file, params_data)
 

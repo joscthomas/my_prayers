@@ -1,49 +1,140 @@
-My Prayers Project To-Do List
-
 - T001: Add Type Hints for UML Class Diagram
   - Type: Enhancement
   - Priority: Medium
-  - Status:
+  - Status: Complete
   - Description: Add type hints using Python’s typing module (e.g., List, Optional) to instance variables and method parameters/return types to clarify relationships for PyCharm’s UML diagram. Ensure proper imports, preserve all comments, and follow PEP 8. The goal is to make associations (e.g., AppController → UIManager), dependencies, and compositions (e.g., Prayer → Category) visible in the UML diagram.
-
 - T002: Grok File Retrieval Error
   - Type: Bug
   - Priority: High
-  - Status:
+  - Status: Deferred
   - Description: Grok retrieves incorrect db_manager.py (63 lines, starts with import sqlite3) from https://raw.githubusercontent.com/joscthomas/my_prayers/main/src/db_manager.py, despite the correct file having 376 lines. Recurred from August 2, 2025. Investigate potential caching, commit hash mismatch, or retrieval logic issues.
-
 - T003: Test Data Directory
   - Type: Testing
   - Priority: Medium
-  - Status:
+  - Status: Complete
   - Description: Verify data_file_path from params.json works with a custom directory.
-
 - T004: Test Fallback Loading
   - Type: Testing
   - Priority: Medium
-  - Status:
+  - Status: Complete
   - Description: Test loading from CSV/JSON when pickle file is missing.
-
 - T005: Verify AppParams
   - Type: Code Update
   - Priority: High
-  - Status:
+  - Status: Complete
   - Description: Confirm AppParams in mpo_model.py correctly defines data_file_path.
-
 - T006: Audit Pickle Data Integrity
   - Type: Code Review
   - Priority: High
-  - Status: Open
+  - Status: Complete
   - Description: Validate all `Prayer` attributes in `_load_from_pickle` in db_manager.py. Test with older pickle files to ensure compatibility.
-
 - T007: Validate PrayerSession.last_panel_set
   - Type: Code Review
   - Priority: Medium
-  - Status: Open
+  - Status: Complete
   - Description: Add validation in `mpo_model.py` to ensure `PrayerSession.last_panel_set` matches panel sets in `panels.csv`.
-
 - T008: Deprecate params.json
   - Type: Refactoring
   - Priority: Low
-  - Status: Open
+  - Status: Complete
   - Description: Review `params.json` usage; deprecate if all attributes (`last_panel_set`, `prayer_streak`, `last_prayer_date`) are moved to `PrayerSession`.
+- WT006-001: Remove category_count from categories.json serialization in db_manager.py
+  - Type: Refactor
+  - Priority: High
+  - Status: Complete
+  - Description: Modify DBManager to exclude category_count when saving/loading categories.json.
+- WT006-002: Add category_count to Category class in mpo_model.py
+  - Type: Enhancement
+  - Priority: High
+  - Status: Complete
+  - Description: Ensure Category class has category_count attribute initialized to 0.
+- WT006-003: Increment category_count in ui_manager.py
+  - Type: Enhancement
+  - Priority: High
+  - Status: Complete
+  - Description: Update display_prayer to increment Category.category_count for the prayer's category.
+- WT006-004: Verify app_controller.py data flow
+  - Type: Verification
+  - Priority: Medium
+  - Status: Complete
+  - Description: Ensure display_prayer call passes category data correctly.
+- WT006-005: Test category count updates
+  - Type: Testing
+  - Priority: Medium
+  - Status: Complete
+  - Description: Add unit tests to verify category_count increments correctly.
+- WT007-001: Persist Prayer.display_count in db_manager.py
+  - Type: Bug Fix
+  - Priority: High
+  - Status: Complete
+  - Description: Update PrayerManager.load_prayers to read display_count from CSV and ensure AppDatabase._load_from_pickle preserves it.
+- WT007-002: Verify display_count increment in app_controller.py
+  - Type: Verification
+  - Priority: Medium
+  - Status: Complete
+  - Description: Confirm get_past_prayers correctly increments Prayer.display_count.
+- WT007-003: Test Prayer.display_count persistence
+  - Type: Testing
+  - Priority: Medium
+  - Status: Complete
+  - Description: Add unit tests to verify Prayer.display_count persists across sessions.
+- WT008-001: Move Category.category_display_count increment to app_controller.py
+  - Type: Refactor
+  - Priority: High
+  - Status: Complete
+  - Description: Move increment of Category.category_display_count from ui_manager.py to app_controller.py in get_past_prayers.
+- WT008-002: Update ui_manager.py to remove category increment
+  - Type: Refactor
+  - Priority: High
+  - Status: Complete
+  - Description: Remove categories parameter and increment logic from display_prayer in ui_manager.py.
+- WT008-003: Test consolidated display count increments
+  - Type: Testing
+  - Priority: Medium
+  - Status: Complete
+  - Description: Add unit tests to verify Prayer.display_count and Category.category_display_count increment correctly in app_controller.py.
+- WT009-001: Test UML diagram generation in PyCharm
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Verify that added type hints in mpo_model.py, app_controller.py, db_manager.py, and ui_manager.py correctly generate UML class diagrams in PyCharm, showing associations and compositions.
+- WT009-002: Verify type hint compatibility with Python 3.11
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Ensure type hints are compatible with Python 3.11 and do not cause runtime errors.
+- WT009-003: Add unit tests for type hint validation
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Create unit tests to validate type hints using mypy or PyCharm's type checker.
+- WT010-001: Review __init__.py for package initialization
+  - Type: Review
+  - Priority: Low
+  - Status: Open
+  - Description: Evaluate if src/__init__.py should include package-level imports or configuration for future enhancements.
+- WT010-002: Update type hints for AppDatabase.session
+  - Type: Enhancement
+  - Priority: Medium
+  - Status: Open
+  - Description: Add explicit type hint `session: PrayerSession` in `AppDatabase.__init__` to clarify usage.
+- WT010-003: Test session attribute access
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Add unit tests to verify `session` access in `AppDatabase` and `PanelManager` after fixing references.
+- WT011-001: Add properties for protected attributes in AppParams
+  - Type: Refactor
+  - Priority: High
+  - Status: Complete
+  - Description: Add public properties for `_id_desc`, `_app`, `_app_desc`, `_install_path_desc`, `_data_file_path_desc`, and `_past_prayer_display_count_desc` in `AppParams` to resolve protected access errors.
+- WT011-002: Test protected attribute access fixes
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Add unit tests to verify that `AppDatabase.close` correctly uses `AppParams` properties and serializes `params.json` without errors.
+- WT012-001: Test updated PrayerSession constructor
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Add unit tests to verify that `PrayerSession` constructor correctly initializes `last_prayer_date`, `prayer_streak`, and `last_panel_set` in `AppDatabase._load_from_pickle`.

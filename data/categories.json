@@ -2,47 +2,38 @@
     "categories": [
         {
             "name": "me",
-            "display_count": 0,
             "weight": 1
         },
         {
             "name": "us",
-            "display_count": 0,
             "weight": 2
         },
         {
             "name": "friends",
-            "display_count": 0,
             "weight": 1
         },
         {
             "name": "family",
-            "display_count": 0,
             "weight": 1
         },
         {
             "name": "robin",
-            "display_count": 0,
-            "weight": 1
+            "weight": 10
         },
         {
             "name": "nation",
-            "display_count": 0,
             "weight": 1
         },
         {
             "name": "casas",
-            "display_count": 0,
             "weight": 1
         },
         {
             "name": "brothers and sisters",
-            "display_count": 0,
             "weight": 1
         },
         {
             "name": "kingdom",
-            "display_count": 0,
             "weight": 1
         }
     ]

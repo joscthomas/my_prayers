@@ -5,9 +5,9 @@
     "app_desc": "name of the application",
     "install_path": ".",
     "install_path_desc": "app install directory path",
-    "data_file_path": "..\\data",
+    "data_file_path": "../data",
     "data_file_path_desc": "the path where the apps data files reside",
     "past_prayer_display_count": 3,
-    "past_prayer_display_count_desc": "number of existing prayers to display",
+    "past_prayer_display_count_desc": "number of existing prayers to display"
 
 }

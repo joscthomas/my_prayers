@@ -21,12 +21,12 @@ class Prayer:
         if category is None:
             raise ModelError("Category cannot be None")
 
-        self._prayer = prayer
-        self._create_date = create_date or date.today().strftime("%d-%b-%Y")
-        self._answer_date = answer_date
-        self._category = category
-        self._answer = answer
-        self._display_count = display_count if display_count >= 0 else 0
+        self._prayer: str = prayer
+        self._create_date: str = create_date or date.today().strftime("%d-%b-%Y")
+        self._answer_date: Optional[str] = answer_date
+        self._category: str = category
+        self._answer: Optional[str] = answer
+        self._display_count: int = display_count if display_count >= 0 else 0
 
     @property
     def prayer(self) -> str:
@@ -78,9 +78,9 @@ class Category:
         if weight < 1:
             raise ModelError("Category weight must be at least 1")
 
-        self._category = category
-        self._category_display_count = count
-        self._category_weight = weight
+        self._category: str = category
+        self._category_display_count: int = count
+        self._category_weight: int = weight
         self._category_prayer_list: List[Prayer] = []
 
     @property
@@ -121,9 +121,9 @@ class Panel:
         if not all(isinstance(p, PanelPgraph) for p in pgraph_list):
             raise ModelError("All items in pgraph_list must be PanelPgraph objects")
 
-        self._panel_seq = panel_seq
-        self._panel_header = panel_header
-        self._pgraph_list = pgraph_list
+        self._panel_seq: int = panel_seq
+        self._panel_header: str = panel_header
+        self._pgraph_list: List[PanelPgraph] = pgraph_list
 
     @property
     def panel_seq(self) -> int:
@@ -147,9 +147,9 @@ class PanelPgraph:
         if not text:
             raise ModelError("Paragraph text cannot be empty")
 
-        self._pgraph_seq = pgraph_seq
-        self._verse = verse
-        self._text = text
+        self._pgraph_seq: int = pgraph_seq
+        self._verse: Optional[str] = verse
+        self._text: str = text
 
     @property
     def pgraph_seq(self) -> int:
@@ -177,45 +177,70 @@ class AppParams:
             missing = [key for key in required_keys if key not in params_dict]
             raise ModelError(f"Missing required parameters: {missing}")
 
-        self._id = params_dict['id']
-        self._id_desc = params_dict['id_desc']
-        self._app = params_dict['app']
-        self._app_desc = params_dict['app_desc']
-        self._install_path = params_dict['install_path']
-        self._install_path_desc = params_dict['install_path_desc']
-        self._data_file_path = params_dict['data_file_path']
-        self._data_file_path_desc = params_dict['data_file_path_desc']
-        self._past_prayer_display_count = params_dict['past_prayer_display_count']
-        self._past_prayer_display_count_desc = params_dict['past_prayer_display_count_desc']
+        self._id: str = params_dict['id']
+        self._id_desc: str = params_dict['id_desc']
+        self._app: str = params_dict['app']
+        self._app_desc: str = params_dict['app_desc']
+        self._install_path: str = params_dict['install_path']
+        self._install_path_desc: str = params_dict['install_path_desc']
+        self._data_file_path: str = params_dict['data_file_path']
+        self._data_file_path_desc: str = params_dict['data_file_path_desc']
+        self._past_prayer_display_count: int = params_dict['past_prayer_display_count']
+        self._past_prayer_display_count_desc: str = params_dict['past_prayer_display_count_desc']
 
     @property
     def id(self) -> str:
         return self._id
 
     @property
+    def id_desc(self) -> str:
+        return self._id_desc
+
+    @property
+    def app(self) -> str:
+        return self._app
+
+    @property
+    def app_desc(self) -> str:
+        return self._app_desc
+
+    @property
     def install_path(self) -> str:
         return self._install_path
+
+    @property
+    def install_path_desc(self) -> str:
+        return self._install_path_desc
 
     @property
     def data_file_path(self) -> str:
         return self._data_file_path
 
     @property
+    def data_file_path_desc(self) -> str:
+        return self._data_file_path_desc
+
+    @property
     def past_prayer_display_count(self) -> int:
         return self._past_prayer_display_count
+
+    @property
+    def past_prayer_display_count_desc(self) -> str:
+        return self._past_prayer_display_count_desc
 
 
 class PrayerSession:
     """Tracks details about a prayer session."""
 
-    def __init__(self, session_date: Optional[str] = None):
-        self._session_date = session_date or date.today().strftime("%d-%b-%Y")
-        self._new_prayer_added_count = 0
-        self._past_prayer_prayed_count = 0
-        self._answered_prayer_count = 0
-        self._last_prayer_date = None  # Added to store last prayer date
-        self._prayer_streak = 0  # Added to store prayer streak
-        self._last_panel_set = None  # Added to store last panel set
+    def __init__(self, session_date: Optional[str] = None, last_prayer_date: Optional[str] = None,
+                 prayer_streak: int = 0, last_panel_set: Optional[str] = None):
+        self._session_date: str = session_date or date.today().strftime("%d-%b-%Y")
+        self._new_prayer_added_count: int = 0
+        self._past_prayer_prayed_count: int = 0
+        self._answered_prayer_count: int = 0
+        self._last_prayer_date: Optional[str] = last_prayer_date
+        self._prayer_streak: int = prayer_streak if prayer_streak >= 0 else 0
+        self._last_panel_set: Optional[str] = last_panel_set
 
     @property
     def session_date(self) -> str:
@@ -281,7 +306,8 @@ class PrayerSession:
 class State:
     """Represents a state in the application's state machine."""
 
-    def __init__(self, name: str, action_event: str, to_state: Optional[str] = None, auto_trigger: Optional[bool] = False):
+    def __init__(self, name: str, action_event: str, to_state: Optional[str] = None,
+                 auto_trigger: Optional[bool] = False) -> None:
         """
         Initialize a state.
 
@@ -298,10 +324,10 @@ class State:
             raise ModelError("State name cannot be empty")
         if not action_event:
             raise ModelError("Action event cannot be empty")
-        self._name = name
-        self._action_event = action_event
-        self._to_state = to_state
-        self._auto_trigger = auto_trigger
+        self._name: str = name
+        self._action_event: str = action_event
+        self._to_state: Optional[str] = to_state
+        self._auto_trigger: bool = auto_trigger
 
     @property
     def name(self) -> str:
@@ -345,7 +371,7 @@ class StateMachine:
                 name=data['name'],
                 action_event=data['action_event'],
                 to_state=data.get('to_state'),
-                auto_trigger=data.get('auto_trigger', 'False')
+                auto_trigger=data.get('auto_trigger', False)
             )
             self._states.append(state)
         self._current_state: Optional[State] = self._states[0] if self._states else None

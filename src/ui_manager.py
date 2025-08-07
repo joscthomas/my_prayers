@@ -8,22 +8,20 @@ import textwrap
 
 from mpo_model import Panel, PanelPgraph, Prayer, AppParams
 
-
 class UIError(Exception):
     """Custom exception for UI-related errors."""
     pass
-
 
 class AppDisplay:
     """Manages the user interface for the My Prayers application (View in MVC)."""
 
     def __init__(self, max_line_width: int = 80):
         """Initialize the UI with configuration."""
-        self.max_line_width = max_line_width
+        self.max_line_width: int = max_line_width
         self.last_panel: Optional[Panel] = None
         logging.info("AppDisplay initialized")
 
-    def close_ui(self):
+    def close_ui(self) -> None:
         """Clean up and close the UI."""
         logging.info("Closing UI")
         # Placeholder for future cleanup (e.g., closing a GUI window)
@@ -116,7 +114,7 @@ class AppDisplay:
             logging.info("User interrupted answer input")
             raise UIError("Answer input interrupted by user")
 
-    def display_prayer(self, prayer: Prayer):
+    def display_prayer(self, prayer: Prayer) -> None:
         """Display a prayer's text."""
         if not isinstance(prayer, Prayer):
             logging.error(f"Invalid prayer object: {prayer}")
@@ -124,6 +122,5 @@ class AppDisplay:
         if not prayer.prayer:
             logging.warning("Empty prayer text")
             return
-
         print(f"\n{textwrap.fill(prayer.prayer, self.max_line_width)}\n")
         logging.debug(f"Displayed prayer: {prayer.prayer} {prayer.create_date} {prayer.category}")
