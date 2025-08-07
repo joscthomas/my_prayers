@@ -138,3 +138,28 @@
   - Priority: Medium
   - Status: Open
   - Description: Add unit tests to verify that `PrayerSession` constructor correctly initializes `last_prayer_date`, `prayer_streak`, and `last_panel_set` in `AppDatabase._load_from_pickle`.
+- T013: Test save_pickle BinaryIO type hint fix
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Add unit tests to verify that the BinaryIO type hint in PersistenceManager.save_pickle resolves the type error and ensures pickle.dump works correctly. Include a test case for runtime behavior with pickle.dump.
+- T014: Review export method for static conversion
+  - Type: Review
+  - Priority: Low
+  - Status: Open
+  - Description: Evaluate if PersistenceManager.export should be static after implementing export logic, as it may require instance state (e.g., prayers, panels).
+- T015: Review close_ui method for static conversion
+  - Type: Review
+  - Priority: Low
+  - Status: Open
+  - Description: Evaluate if AppDisplay.close_ui should be static after implementing GUI logic, as it may require instance state (e.g., GUI window resources).
+- T016: Test AppDatabase session initialization fix
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Add unit tests to verify that AppDatabase.session is initialized before PanelManager access, preventing AttributeError during initialization.
+- T017: Test AppDatabase _load_params implementation
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Add unit tests to verify that AppDatabase._load_params correctly loads params.json and initializes AppParams without errors.

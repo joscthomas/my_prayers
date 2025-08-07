@@ -8,6 +8,7 @@ import os
 import random
 from datetime import datetime, date
 from typing import List, Optional, Dict
+from typing import IO, BinaryIO
 import logging
 
 from mpo_model import Prayer, Category, Panel, PanelPgraph, AppParams, PrayerSession
@@ -43,13 +44,14 @@ class PersistenceManager:
         """Save objects to the pickle file."""
         try:
             os.makedirs(self.data_dir, exist_ok=True)  # Ensure data directory exists
-            with open(self.pickle_file, "wb") as file:
-                pickle.dump(objects, file)
+            with open(self.pickle_file, "wb") as file:  # type: BinaryIO
+                pickle.dump(objects, file)  # type: ignore
         except Exception as e:
             logging.error(f"Failed to save pickle file {self.pickle_file}: {e}")
             raise DatabaseError(f"Failed to save pickle file: {e}")
 
-    def load_json(self, file_path: str) -> Dict:
+    @staticmethod
+    def load_json(file_path: str) -> Dict:
         """Load data from a JSON file."""
         try:
             if not os.path.exists(file_path):
@@ -70,7 +72,8 @@ class PersistenceManager:
             logging.error(f"Failed to save JSON file {file_path}: {e}")
             raise DatabaseError(f"Failed to save JSON file: {e}")
 
-    def load_csv(self, file_path: str) -> pd.DataFrame:
+    @staticmethod
+    def load_csv(file_path: str) -> pd.DataFrame:
         """Load a CSV file into a pandas DataFrame."""
         try:
             df = pd.read_csv(file_path)
@@ -284,12 +287,12 @@ class AppDatabase:
                  panels_file: str = "panels.csv", prayers_file: str = "prayers.csv",
                  states_file: str = "states.json"):
         self.persistence: PersistenceManager = PersistenceManager(data_dir, pickle_file, params_file,
-                                             categories_file, states_file)
+                                                                  categories_file, states_file)
         self.app_params: AppParams = self._load_params()
+        self.session: PrayerSession = PrayerSession()  # Moved before panel_manager
         self.prayer_manager: PrayerManager = PrayerManager(self.persistence)
         self.panel_manager: PanelManager = PanelManager(self.persistence, self)
         self.category_manager: CategoryManager = CategoryManager(self.persistence, self.prayer_manager)
-        self.session: PrayerSession = PrayerSession()
 
         if os.path.exists(self.persistence.pickle_file):
             self._load_from_pickle()

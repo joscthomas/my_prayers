@@ -128,8 +128,31 @@
     - I will copy the todo.md file and add the updated version in the repository upon completion of our session.
     - Always provide the todo.md content in a plain text code block, which should retain all formatting, including dashes and indentation.
 
-16. Unit Testing
-    - Coming soon. 
+16. Automated Unit Testing
+    - Testing Objectives: 
+      - Verify functionality, ensure reliability, and validate user interactions for the My Prayers application, focusing on CRUD operations for Prayer objects.
+      - Prioritize business logic in mpo_model.py and coordination logic in app_controller.py with ui_manager.py and db_manager.py.
+      - Confirm database CRUD operations without relying on specific database technology.
+    - Testing Framework:
+      - Use pytest for its readable syntax and flexibility, suitable for Python 3.11 and my learning preferences.
+      - Use pytest fixtures for mocking database and UI interactions.
+    - Testable Components:
+      - Focus on high-priority units: 
+        - mpo_model.py: Prayer and Category class methods (e.g., create_prayer, mark_answered).
+        - app_controller.py: Coordination logic (e.g., handling user input and updating model/view).
+        - db_manager.py: CRUD operations (e.g., save_prayer, retrieve_prayer).
+        - ui_manager.py: User interaction methods (e.g., display_menu, get_user_input).
+    - Setup Instructions:
+      - Test files are in a tests/ directory in the project root.
+      - Run tests via PyCharm’s terminal: pytest tests/ or configure PyCharm’s test runner.
+    - Testing Guidelines:
+      - Write tests to cover business logic (e.g., prayer creation, categorization) and coordination logic (e.g., input processing, model updates).
+      - Use mocks to isolate db_manager.py and ui_manager.py interactions.
+      - Follow PEP 8 for test code, with clear docstrings for test functions.
+      - Prioritize high-value tests (e.g., core CRUD operations) for maximum reliability.
+    - Version Control:
+      - Commit test files to Git: git add tests/*.py, git commit -m "Add unit tests for My Prayers", git push origin main.
+      - Store test files in tests/ on the GitHub repository: https://github.com/joscthomas/my_prayers.
 
 17. Continuous Integration
     - Coming soon.

@@ -57,7 +57,8 @@ class AppDisplay:
         self.last_panel = panel
         return header
 
-    def get_response(self, prompt: str) -> str:
+    @staticmethod
+    def get_response(prompt: str) -> str:
         """Get user input with the given prompt."""
         try:
             response = input(prompt).strip()
@@ -67,7 +68,8 @@ class AppDisplay:
             logging.info("User interrupted input")
             raise UIError("Input interrupted by user")
 
-    def ui_get_new_prayer(self) -> Tuple[Optional[Prayer], bool]:
+    @staticmethod
+    def ui_get_new_prayer() -> Tuple[Optional[Prayer], bool]:
         """Collect a new prayer from the user."""
         try:
             prayer_text = input("Enter prayer request (or return if done)\n").strip()
@@ -95,7 +97,8 @@ class AppDisplay:
             logging.error(f"Error collecting new prayer: {e}")
             raise UIError(f"Failed to create prayer: {e}")
 
-    def get_answer(self, prayer: Prayer) -> Tuple[str, str]:
+    @staticmethod
+    def get_answer(prayer: Prayer) -> Tuple[str, str]:
         """Collect an answer for a prayer and return the answer and date."""
         if not isinstance(prayer, Prayer):
             logging.error(f"Invalid prayer object: {prayer}")
