@@ -127,7 +127,7 @@
   - Type: Refactor
   - Priority: High
   - Status: Complete
-  - Description: Add public properties for `_id_desc`, `_app`, `_app_desc`, `_install_path_desc`, `_data_file_path_desc`, and `_past_prayer_display_count_desc` in `AppParams` to resolve protected access errors.
+  - Description: Add public properties for `_id`, `_id_desc`, `_app`, `_app_desc`, `_install_path`, `_install_path_desc`, `_data_file_path`, `_data_file_path_desc`, and `_past_prayer_display_count_desc` in `AppParams` to resolve protected access errors.
 - WT011-002: Test protected attribute access fixes
   - Type: Testing
   - Priority: Medium
@@ -163,3 +163,13 @@
   - Priority: Medium
   - Status: Open
   - Description: Add unit tests to verify that AppDatabase._load_params correctly loads params.json and initializes AppParams without errors.
+- T018: Test Prayer constructor
+  - Type: Testing
+  - Priority: High
+  - Status: Complete
+  - Description: Add unit tests to verify that the Prayer constructor in mpo_model.py correctly initializes attributes (prayer, category, create_date, answer_date, answer, display_count) with valid inputs.
+- T019: Fix ModuleNotFoundError in test_mpo_model.py
+  - Type: Bug Fix
+  - Priority: High
+  - Status: Open
+  - Description: Resolve ModuleNotFoundError for mpo_model import in tests/test_mpo_model.py by adding src/__init__.py and ensuring pytest runs from the src directory or using relative imports.
