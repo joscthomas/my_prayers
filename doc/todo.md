@@ -11,6 +11,65 @@
 - T003: Test Data Directory
   - Type: Testing
   - Priority: Medium
+  - Status Complete
+  - Description: Verify data_file_path from params.json works with a custom directory.
+- T004: Test Fallback Loading
+  - Type: Testing
+  - Priority: Medium
+  - Status: Complete
+  - Description: Test loading from CSV/JSON when pickle file is missing.
+- T005: Verify AppParams
+  - Type: Code Update
+  - Priority: High
+  - Status: Complete
+  - Description: Confirm AppParams in mpo_model.py correctly defines data_file_path.
+- T006: Audit Pickle Data Integrity
+  - Type: Code Review
+  - Priority: High
+  - Status: Complete
+  - Description: Validate all `Prayer` attributes in `_load_from_pickle` in db_manager.py. Test with older pickle files to ensure compatibility.
+- T007: Validate PrayerSession.last_panel_set
+  - Type: Code Review
+  - Priority: Medium
+  - Status: Complete
+  - Description: Add validation in `mpo wchar
+
+System: ### Response to Request for todo.md Inline
+
+As requested, here is the inline content of `todo.md` with all formatting preserved, including dashes and indentation, as per the project guidelines:
+
+```plaintext
+- T001: Add Type Hints for UML Class Diagram
+  - Type: Enhancement
+  - Priority: Medium
+  - Status: Complete
+  - Description: Add type hints using Python’s typing module (e.g., List, Optional) to instance variables and method parameters/return types to clarify relationships for PyCharm’s UML diagram. Ensure proper imports, preserve all comments, and follow PEP 8. The goal is to make associations (e.g., AppController → UIManager), dependencies, and compositions (e.g., Prayer → Category) visible in the UML diagram.
+- T002: Grok File Retrieval Error
+  - Type: Bug
+  - Priority: High
+  - Status: Deferred
+  - Description: Grok retrieves incorrect db_manager.py (63 lines, starts with import sqlite3) from https://raw.githubusercontent.com/joscthomas/my_prayers/main/src/db_manager.py, despite the correct file having 376 lines. Recurred from August 2, 2025. Investigate potential caching, commit hash mismatch, or retrieval logic issues.
+- T003: Test Data Directory
+  - Type: Testing
+  - Priority: Medium
+  - Status: Complete
+  - Description: Verify data_file_path from params.json works with a custom directory.
+- T004: Test Fallback The provided todo.md appears to be truncated. Based on the previous session, the full `todo.md` includes additional tasks up to T022. Below is the complete, updated `todo.md` content, incorporating the changes from the last session (T021 marked complete, T022 added):
+
+```plaintext
+- T001: Add Type Hints for UML Class Diagram
+  - Type: Enhancement
+  - Priority: Medium
+  - Status: Complete
+  - Description: Add type hints using Python’s typing module (e.g., List, Optional) to instance variables and method parameters/return types to clarify relationships for PyCharm’s UML diagram. Ensure proper imports, preserve all comments, and follow PEP 8. The goal is to make associations (e.g., AppController → UIManager), dependencies, and compositions (e.g., Prayer → Category) visible in the UML diagram.
+- T002: Grok File Retrieval Error
+  - Type: Bug
+  - Priority: High
+  - Status: Deferred
+  - Description: Grok retrieves incorrect db_manager.py (63 lines, starts with import sqlite3) from https://raw.githubusercontent.com/joscthomas/my_prayers/main/src/db_manager.py, despite the correct file having 376 lines. Recurred from August 2, 2025. Investigate potential caching, commit hash mismatch, or retrieval logic issues.
+- T003: Test Data Directory
+  - Type: Testing
+  - Priority: Medium
   - Status: Complete
   - Description: Verify data_file_path from params.json works with a custom directory.
 - T004: Test Fallback Loading
@@ -173,3 +232,18 @@
   - Priority: High
   - Status: Open
   - Description: Resolve ModuleNotFoundError for mpo_model import in tests/test_mpo_model.py by adding src/__init__.py and ensuring pytest runs from the src directory or using relative imports.
+- T020: Test Prayer constructor edge cases
+  - Type: Testing
+  - Priority: High
+  - Status: Complete
+  - Description: Add unit tests to verify Prayer constructor in mpo_model.py handles edge cases (e.g., empty prayer text, invalid category) correctly.
+- T021: Convert unittest files to pytest
+  - Type: Testing
+  - Priority: High
+  - Status: Complete
+  - Description: Convert test_db_manager.py, test_app_controller.py, and test_ui_controller.py from unittest to pytest, adding tests for save_prayer, get_past_prayers, and display_menu respectively.
+- T022: Test AppDatabase.retrieve_prayer edge cases
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Add unit tests to verify AppDatabase.retrieve_prayer handles edge cases (e.g., partial prayer text match, case sensitivity) correctly.
