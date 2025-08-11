@@ -3,7 +3,7 @@
 
 import pytest
 from datetime import date
-from ..mpo_model import Prayer, Category, ModelError
+from ..src.mpo_model import Prayer, Category, ModelError
 
 @pytest.fixture
 def valid_prayer():

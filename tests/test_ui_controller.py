@@ -3,12 +3,12 @@
 
 import pytest
 from unittest.mock import patch
-from ..ui_manager import UIManager
+from ..src.ui_manager import AppDisplay
 
 @pytest.fixture
 def ui_manager():
-    """Fixture to create a new UIManager instance."""
-    return UIManager()
+    """Fixture to create a new AppDisplay instance."""
+    return AppDisplay()
 
 @patch('builtins.input', return_value='1')
 def test_display_menu_valid_choice(mock_input, ui_manager):

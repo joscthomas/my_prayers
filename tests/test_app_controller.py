@@ -3,8 +3,8 @@
 
 import pytest
 from unittest.mock import Mock
-from ..app_controller import AppController
-from ..mpo_model import Prayer
+from ..src.app_controller import AppController
+from ..src.mpo_model import Prayer
 
 @pytest.fixture
 def app_controller():

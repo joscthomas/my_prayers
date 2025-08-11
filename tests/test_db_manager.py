@@ -2,8 +2,8 @@
 # Tests db_manager
 
 import pytest
-from ..db_manager import AppDatabase
-from ..mpo_model import Prayer
+from ..src.db_manager import AppDatabase
+from ..src.mpo_model import Prayer
 
 @pytest.fixture
 def db_manager():
