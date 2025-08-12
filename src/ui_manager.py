@@ -27,6 +27,14 @@ class AppDisplay:
         # Placeholder for future cleanup (e.g., closing a GUI window)
         pass
 
+    def display_menu(self):
+        """Display the main menu options."""
+        print("1. Create new prayer")
+
+    def get_user_input(self):
+        """Get user input for menu selection."""
+        return input("Enter your choice: ")
+
     def display_panel(self, panel: Panel) -> str:
         """Display a Panel and its PanelPgraph objects."""
         if not isinstance(panel, Panel):

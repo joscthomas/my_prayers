@@ -20,7 +20,9 @@ class Prayer:
             raise ModelError("Prayer text cannot be empty")
         if category is None:
             raise ModelError("Category cannot be None")
-
+        valid_categories = ["Praise", "Thanksgiving", "Confession", "Petition", "Intercession", "Other", "General"]
+        if category not in valid_categories:
+            raise ModelError("Invalid category")
         self._prayer: str = prayer
         self._create_date: str = create_date or date.today().strftime("%d-%b-%Y")
         self._answer_date: Optional[str] = answer_date
@@ -230,11 +232,11 @@ class AppParams:
 
 
 class PrayerSession:
-    """Tracks details about a prayer session."""
+    """Tracks data for a single prayer session."""
 
-    def __init__(self, session_date: Optional[str] = None, last_prayer_date: Optional[str] = None,
-                 prayer_streak: int = 0, last_panel_set: Optional[str] = None):
-        self._session_date: str = session_date or date.today().strftime("%d-%b-%Y")
+    def __init__(self, last_prayer_date: Optional[str] = None, prayer_streak: int = 0,
+                 last_panel_set: Optional[str] = None):
+        self._session_date: str = date.today().strftime("%d-%b-%Y")
         self._new_prayer_added_count: int = 0
         self._past_prayer_prayed_count: int = 0
         self._answered_prayer_count: int = 0

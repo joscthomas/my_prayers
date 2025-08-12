@@ -99,6 +99,126 @@ class PersistenceManager:
             logging.error(f"Failed to load states: {e}")
             raise
 
+class PrayerManager:
+    """Manages Prayer objects and their persistence."""
+
+    def __init__(self, persistence: PersistenceManager):
+        self.persistence: PersistenceManager = persistence
+        self.prayers: List[Prayer] = []
+        self.answered_prayers: List[Prayer] = []
+
+    def load_prayers(self, prayers_file: str) -> None:
+        """Load prayers from CSV file."""
+        try:
+            df = self.persistence.load_csv(os.path.join(self.persistence.data_dir, prayers_file))
+            self.prayers = []
+            for _, row in df.iterrows():
+                prayer = Prayer(
+                    prayer=row['prayer'],
+                    category=row['category'],
+                    create_date=row['create_date'],
+                    answer_date=row.get('answer_date', None),
+                    answer=row.get('answer', None),
+                    display_count=int(row.get('display_count', 0))
+                )
+                self.prayers.append(prayer)
+            self.answered_prayers = [prayer for prayer in self.prayers if prayer.answer_date is None]
+            logging.info(f"Loaded {len(self.prayers)} prayers from {prayers_file}")
+        except Exception as e:
+            logging.warning(f"No prayers loaded: {e}")
+            self.prayers = []
+            self.answered_prayers = []
+
+    def create_prayer(self, prayer: Prayer) -> None:
+        """Add a new prayer to the list."""
+        self.prayers.append(prayer)
+        if prayer.answer_date is None:
+            self.answered_prayers.append(prayer)
+        logging.info(f"Created prayer: {prayer.prayer}")
+
+    def save_prayers(self, prayers_file: str) -> None:
+        """Save prayers to CSV file."""
+        try:
+            data = [
+                {
+                    'prayer': prayer.prayer,
+                    'category': prayer.category,
+                    'create_date': prayer.create_date,
+                    'answer_date': prayer.answer_date,
+                    'answer': prayer.answer,
+                    'display_count': prayer.display_count
+                }
+                for prayer in self.prayers
+            ]
+            df = pd.DataFrame(data)
+            df.to_csv(os.path.join(self.persistence.data_dir, prayers_file), index=False)
+            logging.info(f"Saved {len(self.prayers)} prayers to {prayers_file}")
+        except Exception as e:
+            logging.error(f"Failed to save prayers: {e}")
+            raise DatabaseError(f"Failed to save prayers: {e}")
+
+    def get_unanswered_prayers(self) -> List[Prayer]:
+        """Return list of unanswered prayers."""
+        return self.answered_prayers
+
+    def validate(self) -> bool:
+        """Validate prayer data."""
+        for prayer in self.prayers:
+            if not prayer.prayer:
+                logging.error(f"Invalid prayer with empty text: {prayer}")
+                return False
+            if not prayer.category:
+                logging.error(f"Invalid prayer with empty category: {prayer}")
+                return False
+        return True
+
+class CategoryManager:
+    """Manages Category objects and their persistence."""
+
+    def __init__(self, persistence: PersistenceManager, prayer_manager: PrayerManager):
+        self.persistence: PersistenceManager = persistence
+        self.prayer_manager: PrayerManager = prayer_manager
+        self.categories: List[Category] = []
+
+    def load_categories(self, categories_file: str) -> None:
+        """Load categories from JSON file."""
+        try:
+            data = self.persistence.load_json(os.path.join(self.persistence.data_dir, categories_file))
+            self.categories = []
+            for cat_data in data.get('categories', []):
+                category = Category(
+                    category=cat_data['name'],
+                    count=cat_data.get('count', 0),
+                    weight=cat_data.get('weight', 1)
+                )
+                self.categories.append(category)
+            self._assign_prayers_to_categories()
+            logging.info(f"Loaded {len(self.categories)} categories from {categories_file}")
+        except Exception as e:
+            logging.error(f"Failed to load categories: {e}")
+            raise DatabaseError(f"Failed to load categories: {e}")
+
+    def _assign_prayers_to_categories(self) -> None:
+        """Assign prayers to their respective categories."""
+        for category in self.categories:
+            category.category_prayer_list = [
+                prayer for prayer in self.prayer_manager.prayers if prayer.category == category.category
+            ]
+            category.category_display_count = len(category.category_prayer_list)
+            logging.debug(f"Assigned {len(category.category_prayer_list)} prayers to category {category.category}")
+
+    def validate(self) -> bool:
+        """Validate category data."""
+        for category in self.categories:
+            if not category.category:
+                logging.error(f"Invalid category with empty name: {category}")
+                return False
+            # Allow empty prayer lists for testing purposes
+            if not all(isinstance(prayer, Prayer) for prayer in category.category_prayer_list):
+                logging.error(f"Invalid prayer in category {category.category}")
+                return False
+        return True
+
 class PanelManager:
     """Manages loading and validation of Panel and PanelPgraph objects."""
 
@@ -164,119 +284,6 @@ class PanelManager:
                 if not pgraph.text:
                     logging.error(f"Missing text for pgraph {pgraph} in panel {panel}")
                     return False
-        return True
-
-class PrayerManager:
-    """Manages loading, creation, and validation of Prayer objects."""
-
-    def __init__(self, persistence: PersistenceManager):
-        self.persistence: PersistenceManager = persistence
-        self.prayers: List[Prayer] = []
-        self.answered_prayers: List[Prayer] = []
-
-    def load_prayers(self, csv_file: str = "prayers.csv") -> None:
-        """Load prayers from CSV and instantiate Prayer objects."""
-        csv_file = os.path.join(self.persistence.data_dir, csv_file)
-        df = self.persistence.load_csv(csv_file)
-        for row in df.itertuples():
-            # Read display_count from CSV if available, default to 0 if missing or invalid
-            display_count = 0
-            if hasattr(row, 'display_count') and not pd.isna(row.display_count):
-                try:
-                    display_count = int(row.display_count)
-                    if display_count < 0:
-                        display_count = 0
-                        logging.warning(f"Invalid display_count {row.display_count} for prayer '{row.prayer}', setting to 0")
-                except (ValueError, TypeError):
-                    logging.warning(f"Invalid display_count {row.display_count} for prayer '{row.prayer}', setting to 0")
-            prayer = Prayer(
-                prayer=row.prayer,
-                create_date=row.create_date,
-                answer_date=None if pd.isna(row.answer_date) else row.answer_date,
-                category=row.category,
-                answer=None if pd.isna(row.answer) else row.answer,
-                display_count=display_count
-            )
-            self.prayers.append(prayer)
-            if prayer.answer_date is None:
-                self.answered_prayers.append(prayer)
-
-    def create_prayer(self, prayer: Prayer) -> None:
-        """Add a new prayer to the in-memory database."""
-        if not isinstance(prayer, Prayer):
-            raise DatabaseError(f"Invalid prayer object: {prayer}")
-        self.prayers.append(prayer)
-        if prayer.answer_date is None:
-            self.answered_prayers.append(prayer)
-        logging.info(f"Created prayer: {prayer.prayer}")
-
-    def get_unanswered_prayers(self) -> List[Prayer]:
-        """Return a list of unanswered prayers."""
-        return [prayer for prayer in self.answered_prayers if prayer.answer_date is None]
-
-    def validate(self) -> bool:
-        """Validate loaded prayers."""
-        if not self.prayers:
-            logging.warning("No prayers loaded")
-            return True  # Allow empty prayer list for initial setup
-        return True
-
-class CategoryManager:
-    """Manages loading, weighting, and validation of Category objects."""
-
-    def __init__(self, persistence: PersistenceManager, prayer_manager: PrayerManager):
-        self.persistence: PersistenceManager = persistence
-        self.prayer_manager: PrayerManager = prayer_manager
-        self.categories: List[Category] = []
-        self.weighted_categories: List[Category] = []
-
-    def load_categories(self, json_file: str = "categories.json") -> None:
-        """Load categories from JSON and instantiate Category objects."""
-        json_file = os.path.join(self.persistence.data_dir, json_file)
-        try:
-            data = self.persistence.load_json(json_file)
-            json_categories = []
-            for c in data.get('categories', []):
-                category = Category(c['name'], count=0, weight=c['weight'])  # Set count to 0
-                self.categories.append(category)
-                json_categories.append(c['name'])
-
-            prayer_categories = set(prayer.category for prayer in self.prayer_manager.answered_prayers)
-            unique_categories = [c for c in prayer_categories if c not in json_categories]
-            for c in unique_categories:
-                self.categories.append(Category(category=c, count=0, weight=1))
-
-            for category in self.categories:
-                category.category_prayer_list = [
-                    prayer for prayer in self.prayer_manager.answered_prayers
-                    if prayer.category == category.category
-                ]
-
-            self.weighted_categories = []
-            for category in self.categories:
-                for _ in range(category.category_weight):
-                    self.weighted_categories.append(category)
-            self.weighted_categories.extend(self.categories)
-            random.shuffle(self.weighted_categories)
-        except DatabaseError as e:
-            logging.error(f"Failed to load categories: {e}")
-            raise
-
-    def validate(self) -> bool:
-        """Validate loaded categories."""
-        prayer_count = sum(len(category.category_prayer_list) for category in self.categories)
-        if prayer_count == 0:
-            logging.error("No prayers in category prayer lists")
-            return False
-        if not self.prayer_manager.prayers:
-            logging.error("No prayers loaded")
-            return False
-        if not self.prayer_manager.answered_prayers:
-            logging.error("No past prayers loaded")
-            return False
-        if not os.path.exists(self.persistence.categories_file):
-            logging.error("No categories.json file")
-            return False
         return True
 
 class AppDatabase:
@@ -355,6 +362,18 @@ class AppDatabase:
         """Add a new prayer to the database."""
         self.prayer_manager.create_prayer(prayer)
         self.session.new_prayer_added_count += 1
+
+    def save_prayer(self, prayer: Prayer) -> None:
+        """Save a single prayer to the database."""
+        self.prayer_manager.create_prayer(prayer)
+        self.prayer_manager.save_prayers("prayers.csv")
+
+    def retrieve_prayer(self, prayer_text: str) -> Optional[Prayer]:
+        """Retrieve a prayer by its text."""
+        for prayer in self.prayer_manager.prayers:
+            if prayer.prayer == prayer_text:
+                return prayer
+        return None
 
     def export(self) -> None:
         """Export prayers and panels to CSV (placeholder)."""

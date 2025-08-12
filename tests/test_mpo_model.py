@@ -34,6 +34,6 @@ def test_prayer_constructor_invalid_category():
 
 def test_category_constructor():
     """Test Category constructor initializes attributes correctly."""
-    category = Category(name="Praise")
-    assert category.name == "Praise"
-    assert category.category_count == 0
+    category = Category(category="Praise")
+    assert category.category == "Praise"
+    assert category.category_display_count == 0
