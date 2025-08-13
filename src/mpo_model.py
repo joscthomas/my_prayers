@@ -1,5 +1,4 @@
 # mpo_model.py
-# Defines core business entities and logic shared across MVC components.
 
 from datetime import date
 from typing import List, Optional, Dict

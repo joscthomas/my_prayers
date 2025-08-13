@@ -1,9 +1,8 @@
 # test_mpo_model.py
-# Tests mpo_model
 
 import pytest
 from datetime import date
-from ..mpo_model import Prayer, ModelError
+from ..src.mpo_model import Prayer, ModelError
 
 
 def test_prayer_constructor_valid_input():

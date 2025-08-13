@@ -1,5 +1,4 @@
 # db_manager.py
-# Handles data management and database interactions.
 
 import pandas as pd
 import pickle
@@ -13,9 +12,11 @@ import logging
 
 from mpo_model import Prayer, Category, Panel, PanelPgraph, AppParams, PrayerSession
 
+
 class DatabaseError(Exception):
     """Custom exception for database-related errors."""
     pass
+
 
 class PersistenceManager:
     """Handles file I/O operations for persistence (pickle, JSON, CSV)."""
@@ -99,6 +100,7 @@ class PersistenceManager:
             logging.error(f"Failed to load states: {e}")
             raise
 
+
 class PanelManager:
     """Manages loading and validation of Panel and PanelPgraph objects."""
 
@@ -166,6 +168,7 @@ class PanelManager:
                     return False
         return True
 
+
 class PrayerManager:
     """Manages loading, creation, and validation of Prayer objects."""
 
@@ -186,9 +189,11 @@ class PrayerManager:
                     display_count = int(row.display_count)
                     if display_count < 0:
                         display_count = 0
-                        logging.warning(f"Invalid display_count {row.display_count} for prayer '{row.prayer}', setting to 0")
+                        logging.warning(
+                            f"Invalid display_count {row.display_count} for prayer '{row.prayer}', setting to 0")
                 except (ValueError, TypeError):
-                    logging.warning(f"Invalid display_count {row.display_count} for prayer '{row.prayer}', setting to 0")
+                    logging.warning(
+                        f"Invalid display_count {row.display_count} for prayer '{row.prayer}', setting to 0")
             prayer = Prayer(
                 prayer=row.prayer,
                 create_date=row.create_date,
@@ -220,6 +225,7 @@ class PrayerManager:
             logging.warning("No prayers loaded")
             return True  # Allow empty prayer list for initial setup
         return True
+
 
 class CategoryManager:
     """Manages loading, weighting, and validation of Category objects."""
@@ -279,6 +285,7 @@ class CategoryManager:
             return False
         return True
 
+
 class AppDatabase:
     """Coordinates database operations for the My Prayers application."""
 
@@ -320,7 +327,8 @@ class AppDatabase:
             self.prayer_manager.load_prayers("prayers.csv")
             self.category_manager.load_categories("categories.json")
             self.panel_manager.load_panels("panels.csv")
-            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)  # Initialize with defaults
+            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0,
+                                         last_panel_set=None)  # Initialize with defaults
             return
         data = self.persistence.load_pickle()
         if not data:
@@ -328,7 +336,8 @@ class AppDatabase:
             self.prayer_manager.load_prayers("prayers.csv")
             self.category_manager.load_categories("categories.json")
             self.panel_manager.load_panels("panels.csv")
-            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)  # Initialize with defaults
+            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0,
+                                         last_panel_set=None)  # Initialize with defaults
             return
         self.prayer_manager.prayers = data.get('Prayer_instances', [])
         # Validate Prayer objects
@@ -338,7 +347,7 @@ class AppDatabase:
                 raise DatabaseError("Loaded Prayer object missing _category attribute")
         logging.info(f"Loaded {len(self.prayer_manager.prayers)} Prayer instances.")
         self.prayer_manager.answered_prayers = [prayer for prayer in self.prayer_manager.prayers if
-                                               prayer.answer_date is None]
+                                                prayer.answer_date is None]
         logging.info(f"Computed {len(self.prayer_manager.answered_prayers)} unanswered Prayer instances.")
         self.category_manager.categories = data.get('Category_instances', [])
         logging.info(f"Loaded {len(self.category_manager.categories)} Category instances.")
@@ -347,7 +356,8 @@ class AppDatabase:
         if sessions:
             self.session = sessions[-1]
         else:
-            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)  # Initialize with defaults
+            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0,
+                                         last_panel_set=None)  # Initialize with defaults
         # Panels are loaded from CSV, not pickle
         self.panel_manager.load_panels()
 
@@ -406,9 +416,9 @@ class AppDatabase:
     def validate(self) -> bool:
         """Validate all database components."""
         return (
-            self.panel_manager.validate() and
-            self.prayer_manager.validate() and
-            self.category_manager.validate()
+                self.panel_manager.validate() and
+                self.prayer_manager.validate() and
+                self.category_manager.validate()
         )
 
     def _validate_session(self) -> bool:

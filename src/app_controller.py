@@ -1,5 +1,4 @@
 # app_controller.py
-# Coordinates between Model (db_manager) and View (ui_manager).
 
 import logging
 from datetime import datetime, date
@@ -10,9 +9,11 @@ from mpo_model import Prayer, Category, Panel, AppParams, PrayerSession, State, 
 from db_manager import AppDatabase
 from ui_manager import AppDisplay
 
+
 class AppError(Exception):
     """Custom exception for application errors."""
     pass
+
 
 class PrayerSelector:
     """Handles selection and filtering of prayers for display."""
@@ -77,6 +78,7 @@ class PrayerSelector:
 
         return selected_prayers[:max_selections]
 
+
 class SessionManager:
     """Manages prayer session data, such as streaks and counts."""
 
@@ -97,6 +99,7 @@ class SessionManager:
         except (ValueError, TypeError):
             self.session.prayer_streak = 1
         self.session.last_prayer_date = current_date.strftime('%d-%b-%Y')
+
 
 class AppController:
     """Coordinates interactions between UI, database, and other components."""
@@ -127,7 +130,8 @@ class AppController:
                     action = self.handle_state_action(state)
                     self.state_machine.transition(action)
                 else:
-                    panel = next((p for p in self.db_manager.panel_manager.panels if p.panel_header == state.name), None)
+                    panel = next((p for p in self.db_manager.panel_manager.panels if p.panel_header == state.name),
+                                 None)
                     if not panel:
                         raise AppError(f"No panel found for state {state.name}")
                     self.ui_manager.display_panel(panel)
@@ -186,7 +190,8 @@ class AppController:
         continue_displaying = True
 
         while continue_displaying:
-            prayers = self.prayer_selector.select_past_prayers(max_selections=display_num, current_weight=current_weight)
+            prayers = self.prayer_selector.select_past_prayers(max_selections=display_num,
+                                                               current_weight=current_weight)
             if not prayers:
                 self.ui_manager.display_panel(
                     Panel(0, "No Past Prayers", [PanelPgraph(0, None, "No unanswered past prayers available.")])
@@ -234,6 +239,7 @@ class AppController:
         self.db_manager.close()
         self.ui_manager.close_ui()
         quit(0)
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

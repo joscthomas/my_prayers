@@ -9,5 +9,4 @@
     "data_file_path_desc": "the path where the apps data files reside",
     "past_prayer_display_count": 3,
     "past_prayer_display_count_desc": "number of existing prayers to display"
-
 }

@@ -1,5 +1,4 @@
 # ui_manager.py
-# Handles user interface components and presentation logic.
 
 import logging
 from typing import Tuple, Optional
@@ -8,9 +7,11 @@ import textwrap
 
 from mpo_model import Panel, PanelPgraph, Prayer, AppParams
 
+
 class UIError(Exception):
     """Custom exception for UI-related errors."""
     pass
+
 
 class AppDisplay:
     """Manages the user interface for the My Prayers application (View in MVC)."""

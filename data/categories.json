@@ -35,6 +35,18 @@
         {
             "name": "kingdom",
             "weight": 1
+        },
+        {
+            "name": "small group",
+            "weight": 1
+        },
+        {
+            "name": "others",
+            "weight": 1
+        },
+        {
+            "name": "trc",
+            "weight": 1
         }
     ]
 }

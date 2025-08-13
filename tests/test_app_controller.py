@@ -1,4 +1,7 @@
+# test_app_controller.py
+
 import unittest
+from ..src.mpo_model import Prayer, ModelError
 
 
 class MyTestCase(unittest.TestCase):
