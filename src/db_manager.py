@@ -109,11 +109,13 @@ class PanelManager:
         self.app_params: AppParams = app_database.app_params
         self.session: PrayerSession = app_database.session
         self.panels: List[Panel] = []
+        logging.info(f"PanelManager initialized with last_panel_set: {self.session.last_panel_set}")
 
     def load_panels(self, csv_file: str = "panels.csv") -> None:
         """Load panels from CSV and instantiate Panel objects."""
         csv_file = os.path.join(self.persistence.data_dir, csv_file)
         df = self.persistence.load_csv(csv_file)
+        logging.info(f"Before _get_panel_set_id last_panel_set: {self.session.last_panel_set}")
         panel_set_id = self._get_panel_set_id(df)
         df_panels = df.loc[df['panel_set'] == int(panel_set_id)]
 
@@ -136,22 +138,53 @@ class PanelManager:
         if current_panel:
             current_panel = Panel(last_panel_seq, current_panel.panel_header, panel_pgraph_list)
             self.panels.append(current_panel)
-        logging.info(f"Loaded {len(self.panels)} panels from {csv_file}")
+        logging.info(f"Loaded {len(self.panels)} panels from {csv_file} with panel_set {panel_set_id}")
 
     def _get_panel_set_id(self, df: pd.DataFrame) -> int:
-        """Get the next panel set ID for the prayer session."""
-        last_panel_set = int(self.session.last_panel_set or 1)
+        """Get the next panel set ID for the prayer session, rotating sequentially."""
         available_panel_sets = sorted(df['panel_set'].unique())
         if not available_panel_sets:
             raise DatabaseError("No panel sets found in CSV")
-        # Find the next panel set
+        logging.info(f"Available panel sets: {available_panel_sets}")
+
+        # Log the initial state of last_panel_set
+        logging.info(f"Initial last_panel_set: {self.session.last_panel_set}")
+
+        # Check if last_panel_set exists and is valid
+        last_panel_set = None
+        if self.session.last_panel_set is not None:
+            try:
+                last_panel_set = int(self.session.last_panel_set)
+                logging.info(f"Converted last_panel_set to int: {last_panel_set}")
+                # Verify if last_panel_set is in available_panel_sets
+                if last_panel_set not in available_panel_sets:
+                    logging.warning(f"last_panel_set {last_panel_set} not in available panel sets, defaulting to None")
+                    last_panel_set = None
+            except (ValueError, TypeError) as e:
+                logging.warning(f"Invalid last_panel_set '{self.session.last_panel_set}' due to {e}, defaulting to None")
+                last_panel_set = None
+        else:
+            logging.info("last_panel_set is None")
+
+        # If no valid last_panel_set, select the first panel set
+        if last_panel_set is None:
+            selected_panel_set = min(available_panel_sets)
+            self.session.last_panel_set = str(selected_panel_set)
+            logging.info(f"No valid last_panel_set, selected panel_set: {selected_panel_set}")
+            return selected_panel_set
+
+        # Find the next panel set greater than last_panel_set
         for panel_set in available_panel_sets:
             if panel_set > last_panel_set:
                 self.session.last_panel_set = str(panel_set)
+                logging.info(f"Selected next panel_set: {panel_set}")
                 return panel_set
-        # If no higher panel set, cycle to the lowest
-        self.session.last_panel_set = str(min(available_panel_sets))
-        return min(available_panel_sets)
+
+        # If no panel set is greater, cycle to the first panel set
+        selected_panel_set = min(available_panel_sets)
+        self.session.last_panel_set = str(selected_panel_set)
+        logging.info(f"Cycled to first panel_set: {selected_panel_set}")
+        return selected_panel_set
 
     def validate(self) -> bool:
         """Validate loaded panels."""
@@ -296,18 +329,22 @@ class AppDatabase:
         self.persistence: PersistenceManager = PersistenceManager(data_dir, pickle_file, params_file,
                                                                   categories_file, states_file)
         self.app_params: AppParams = self._load_params()
-        self.session: PrayerSession = PrayerSession()  # Moved before panel_manager
+        # Initialize session after loading from pickle to avoid overwriting
+        self.session: PrayerSession = None
         self.prayer_manager: PrayerManager = PrayerManager(self.persistence)
-        self.panel_manager: PanelManager = PanelManager(self.persistence, self)
+        self.panel_manager: PanelManager = None
         self.category_manager: CategoryManager = CategoryManager(self.persistence, self.prayer_manager)
 
         if os.path.exists(self.persistence.pickle_file):
             self._load_from_pickle()
         else:
-            self.panel_manager.load_panels(panels_file)
+            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)
+            self.panel_manager = PanelManager(self.persistence, self)
             self.prayer_manager.load_prayers(prayers_file)
             self.category_manager.load_categories(categories_file)
+            self.panel_manager.load_panels(panels_file)
 
+        logging.info(f"After initialization last_panel_set: {self.session.last_panel_set}")
         if not self.validate():
             raise DatabaseError("Database initialization failed")
 
@@ -324,20 +361,20 @@ class AppDatabase:
         """Load objects from pickle file, fallback to CSV/JSON if missing."""
         if not os.path.exists(self.persistence.pickle_file):
             logging.info("Pickle file not found, loading from CSV and JSON")
+            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)
+            self.panel_manager = PanelManager(self.persistence, self)
             self.prayer_manager.load_prayers("prayers.csv")
             self.category_manager.load_categories("categories.json")
             self.panel_manager.load_panels("panels.csv")
-            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0,
-                                         last_panel_set=None)  # Initialize with defaults
             return
         data = self.persistence.load_pickle()
         if not data:
             logging.info("Empty pickle file, loading from CSV and JSON")
+            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)
+            self.panel_manager = PanelManager(self.persistence, self)
             self.prayer_manager.load_prayers("prayers.csv")
             self.category_manager.load_categories("categories.json")
             self.panel_manager.load_panels("panels.csv")
-            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0,
-                                         last_panel_set=None)  # Initialize with defaults
             return
         self.prayer_manager.prayers = data.get('Prayer_instances', [])
         # Validate Prayer objects
@@ -355,10 +392,13 @@ class AppDatabase:
         logging.info(f"Loaded {len(sessions)} Session instances.")
         if sessions:
             self.session = sessions[-1]
+            logging.info(f"Loaded session last_panel_set: {self.session.last_panel_set}")
         else:
-            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0,
-                                         last_panel_set=None)  # Initialize with defaults
+            self.session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)
+        # Initialize panel_manager after session is loaded
+        self.panel_manager = PanelManager(self.persistence, self)
         # Panels are loaded from CSV, not pickle
+        logging.info(f"Before load_panels() last_panel_set: {self.session.last_panel_set}")
         self.panel_manager.load_panels()
 
     def create_prayer(self, prayer: Prayer) -> None:
@@ -379,6 +419,7 @@ class AppDatabase:
         # Update PrayerSession with last_prayer_date, prayer_streak, and last_panel_set
         self.session.last_prayer_date = date.today().strftime("%d-%b-%Y")
         self.session.prayer_streak = self.session.prayer_streak + 1 if self.session.prayer_streak else 1
+        logging.info(f"Saving last_panel_set: {self.session.last_panel_set}")
 
         objects_to_pickle = {
             'Prayer_instances': self.prayer_manager.prayers,
@@ -424,7 +465,8 @@ class AppDatabase:
     def _validate_session(self) -> bool:
         """Validate the current prayer session."""
         logging.info(f"Session validation: new_prayer_added_count={self.session.new_prayer_added_count}, "
-                     f"past_prayer_prayed_count={self.session.past_prayer_prayed_count}")
+                     f"past_prayer_prayed_count={self.session.past_prayer_prayed_count}, "
+                     f"last_panel_set={self.session.last_panel_set}")
         if self.session.new_prayer_added_count == 0:
             logging.warning("No new prayers added in session")
         if self.session.past_prayer_prayed_count == 0:
