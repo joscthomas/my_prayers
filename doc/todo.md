@@ -163,3 +163,13 @@
   - Priority: Medium
   - Status: Open
   - Description: Add unit tests to verify that AppDatabase._load_params correctly loads params.json and initializes AppParams without errors.
+- T018: Refine load_pickle return type
+  - Type: Enhancement
+  - Priority: Medium
+  - Status: Complete
+  - Description: Update PersistenceManager.load_pickle return type to `Dict[str, List[Any]]` to clarify structure and improve type safety.
+- T019: Add unit tests for refined load_pickle type
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Add pytest tests to verify PersistenceManager.load_pickle returns expected dictionary structure with correct types (e.g., Prayer lists).

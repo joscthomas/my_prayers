@@ -6,7 +6,7 @@ import json
 import os
 import random
 from datetime import datetime, date
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from typing import IO, BinaryIO
 import logging
 
@@ -30,7 +30,7 @@ class PersistenceManager:
         self.categories_file: str = os.path.join(data_dir, categories_file)
         self.states_file: str = os.path.join(data_dir, states_file)
 
-    def load_pickle(self) -> Dict:
+    def load_pickle(self) -> Dict[str, List[Any]]:
         """Load objects from the pickle file."""
         try:
             if not os.path.exists(self.pickle_file):
