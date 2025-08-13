@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 from typing import List
 from ..src.app_controller import PrayerSelector, SessionManager, AppController, AppError
 from ..src.mpo_model import Prayer, Category, PrayerSession, State, StateMachine, AppParams
-from ..src.db_manager import AppDatabase
+from ..src.db_manager import AppDatabase, PrayerManager, CategoryManager
 
 @pytest.fixture
 def mock_db():
@@ -18,6 +18,10 @@ def mock_db():
         'past_prayer_display_count': 2, 'past_prayer_display_count_desc': 'Display count'
     })
     db.session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)
+    db.prayer_manager = MagicMock(spec=PrayerManager)
+    db.prayer_manager.prayers = []
+    db.category_manager = MagicMock(spec=CategoryManager)
+    db.category_manager.categories = []
     return db
 
 @pytest.fixture

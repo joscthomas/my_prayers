@@ -132,7 +132,7 @@ def test_prayer_session_constructor():
 
 def test_prayer_session_set_negative_counts():
     session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)
-    with pytest.raises(ModelError, match="New prayer added count cannot be negative"):
+    with pytest.raises(ModelError, match="New prayer count cannot be negative"):
         session.new_prayer_added_count = -1
     with pytest.raises(ModelError, match="Past prayer prayed count cannot be negative"):
         session.past_prayer_prayed_count = -1
@@ -177,16 +177,24 @@ def test_state_machine_init_empty():
 
 def test_state_machine_validate():
     states_data = [
-        {"name": "WELCOME", "action_event": "get_continue", "to_state": "HONOR GOD"},
-        {"name": "HONOR GOD", "action_event": "get_continue", "to_state": "done"}
+        {"name": "WELCOME", "action_event": "get_continue", "to_state": "HONOR GOD", "auto_trigger": False},
+        {"name": "HONOR GOD", "action_event": "get_continue", "to_state": "MY CONCERNS", "auto_trigger": False},
+        {"name": "MY CONCERNS", "action_event": "get_new_prayers", "to_state": "prayers_done", "auto_trigger": False},
+        {"name": "prayers_done", "action_event": "get_past_prayers", "to_state": "GOD'S WILL", "auto_trigger": False},
+        {"name": "GOD'S WILL", "action_event": "get_continue", "to_state": "CLOSING", "auto_trigger": False},
+        {"name": "CLOSING", "action_event": "quit_app", "to_state": "done", "auto_trigger": False}
     ]
     state_machine = StateMachine(states_data)
-    assert state_machine.validate() is False  # Missing required states and actions
+    assert state_machine.validate() is True
 
 def test_state_machine_transition_valid():
     states_data = [
-        {"name": "WELCOME", "action_event": "get_continue", "to_state": "HONOR GOD"},
-        {"name": "HONOR GOD", "action_event": "get_continue", "to_state": "done"}
+        {"name": "WELCOME", "action_event": "get_continue", "to_state": "HONOR GOD", "auto_trigger": False},
+        {"name": "HONOR GOD", "action_event": "get_continue", "to_state": "MY CONCERNS", "auto_trigger": False},
+        {"name": "MY CONCERNS", "action_event": "get_new_prayers", "to_state": "prayers_done", "auto_trigger": False},
+        {"name": "prayers_done", "action_event": "get_past_prayers", "to_state": "GOD'S WILL", "auto_trigger": False},
+        {"name": "GOD'S WILL", "action_event": "get_continue", "to_state": "CLOSING", "auto_trigger": False},
+        {"name": "CLOSING", "action_event": "quit_app", "to_state": "done", "auto_trigger": False}
     ]
     state_machine = StateMachine(states_data)
     state_machine.transition("get_continue")
@@ -194,8 +202,12 @@ def test_state_machine_transition_valid():
 
 def test_state_machine_transition_invalid():
     states_data = [
-        {"name": "WELCOME", "action_event": "get_continue", "to_state": "HONOR GOD"},
-        {"name": "HONOR GOD", "action_event": "get_continue", "to_state": "done"}
+        {"name": "WELCOME", "action_event": "get_continue", "to_state": "HONOR GOD", "auto_trigger": False},
+        {"name": "HONOR GOD", "action_event": "get_continue", "to_state": "MY CONCERNS", "auto_trigger": False},
+        {"name": "MY CONCERNS", "action_event": "get_new_prayers", "to_state": "prayers_done", "auto_trigger": False},
+        {"name": "prayers_done", "action_event": "get_past_prayers", "to_state": "GOD'S WILL", "auto_trigger": False},
+        {"name": "GOD'S WILL", "action_event": "get_continue", "to_state": "CLOSING", "auto_trigger": False},
+        {"name": "CLOSING", "action_event": "quit_app", "to_state": "done", "auto_trigger": False}
     ]
     state_machine = StateMachine(states_data)
     with pytest.raises(ModelError, match="No valid transition"):

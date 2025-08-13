@@ -127,7 +127,7 @@
   - Type: Refactor
   - Priority: High
   - Status: Complete
-  - Description: Add public properties for `_id_desc`, `_app`, `_app_desc`, `_install_path_desc`, `_data_file_path_desc`, and `_past_prayer_display_count_desc` in `AppParams` to resolve protected access errors.
+  - Description: Add public properties for `_id`, `_id_desc`, `_app`, `_app_desc`, `_install_path`, `_install_path_desc`, `_data_file_path`, `_data_file_path_desc`, `_past_prayer_display_count`, and `_past_prayer_display_count_desc` in `AppParams` to resolve protected access errors.
 - WT011-002: Test protected attribute access fixes
   - Type: Testing
   - Priority: Medium
@@ -173,3 +173,58 @@
   - Priority: Medium
   - Status: Open
   - Description: Add pytest tests to verify PersistenceManager.load_pickle returns expected dictionary structure with correct types (e.g., Prayer lists).
+- WT013-001: Implement comprehensive tests for mpo_model.py
+  - Type: Testing
+  - Priority: Medium
+  - Status: Complete
+  - Description: Add pytest tests for Prayer, Category, Panel, PanelPgraph, AppParams, PrayerSession, State, and StateMachine to cover constructor, property setters, and validation logic.
+- WT013-002: Implement comprehensive tests for db_manager.py
+  - Type: Testing
+  - Priority: Medium
+  - Status: Complete
+  - Description: Add pytest tests for PersistenceManager, PanelManager, PrayerManager, CategoryManager, and AppDatabase to cover file I/O, CRUD operations, and initialization.
+- WT013-003: Implement comprehensive tests for ui_manager.py
+  - Type: Testing
+  - Priority: Medium
+  - Status: Complete
+  - Description: Add pytest tests for AppDisplay to cover panel display, user input, prayer creation, and answer collection.
+- WT013-004: Implement comprehensive tests for app_controller.py
+  - Type: Testing
+  - Priority: Medium
+  - Status: Complete
+  - Description: Add pytest tests for PrayerSelector, SessionManager, and AppController to cover prayer selection, session management, and state handling.
+- T020: Fix pytest module import errors
+  - Type: Bug
+  - Priority: High
+  - Status: Complete
+  - Description: Resolve ModuleNotFoundError for 'mpo_model' in test_db_manager.py, test_ui_manager.py, and test_app_controller.py by correcting pytest.ini to use 'pythonpath = src' and ensuring src/__init__.py and tests/__init__.py are present.
+- T021: Fix params.json path in db_manager.py
+  - Type: Bug Fix
+  - Priority: High
+  - Status: Open
+  - Description: Update PersistenceManager.load_json in db_manager.py to use absolute path or default params to avoid 'JSON file ../data/params.json not found' in AppController tests.
+- T022: Fix PersistenceManager.save_json file path
+  - Type: Bug Fix
+  - Priority: Medium
+  - Status: Open
+  - Description: Update PersistenceManager.save_json in db_manager.py to prepend data_dir to file_path to match test expectations in test_persistence_manager_save_json.
+- T023: Fix PersistenceManager.load_pickle logic
+  - Type: Bug Fix
+  - Priority: Medium
+  - Status: Open
+  - Description: Investigate and fix PersistenceManager.load_pickle to return correct data structure instead of empty dict in test_persistence_manager_load_pickle_valid.
+- T024: Investigate AppDisplay isinstance checks
+  - Type: Bug Fix
+  - Priority: Medium
+  - Status: Open
+  - Description: Investigate why isinstance checks in AppDisplay.display_panel, get_answer, and display_prayer fail in ui_manager.py, possibly due to import or class mismatches.
+- WT014-001: Fix AppDisplay isinstance checks in ui_manager.py
+  - Type: Bug Fix
+  - Priority: Medium
+  - Status: Open
+  - Description: Resolve isinstance check failures in AppDisplay.display_panel, get_answer, and display_prayer in ui_manager.py to fix test failures in test_ui_manager.py.
+- WT015-001: Fix AppDatabase.close in db_manager.py
+  - Type: Bug Fix
+  - Priority: Medium
+  - Status: Open
+  - Description: Update AppDatabase.close to ensure PersistenceManager.save_pickle is called to fix test_app_database_close failure.
