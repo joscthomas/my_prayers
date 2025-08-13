@@ -39,6 +39,7 @@
    - Version Control: Git.
    - Testing: TBD (If applicable, include instructions for running tests; e.g., using `unittest` or `pytest`).
    - Documentation: Maintain a `README.md` with setup, usage, and contribution instructions.
+   - Create docstrings for all modules and functions that provide a clear description of what is going on, designed for someone who is still learning Python.
 
 6. Version Control:
    - PyCharm GUI for Git operations:

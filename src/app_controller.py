@@ -1,6 +1,13 @@
 # app_controller.py
 # Coordinates between Model (db_manager) and View (ui_manager).
 
+"""
+This module serves as the Controller in the Model-View-Controller (MVC) pattern for the My Prayers application. It
+connects the user interface (View) with the data storage (Model), manages the flow of the app using a state machine,
+handles prayer selection and session tracking, and processes user actions like adding new prayers or marking them as
+answered. As a beginner, think of this as the 'brain' that decides what happens next based on user input and data.
+"""
+
 import logging
 from datetime import datetime, date
 import random
@@ -10,24 +17,59 @@ from mpo_model import Prayer, Category, Panel, AppParams, PrayerSession, State, 
 from db_manager import AppDatabase
 from ui_manager import AppDisplay
 
+
 class AppError(Exception):
-    """Custom exception for application errors."""
-    pass
+    """
+    Custom exception for errors in the application's control flow.
+
+    Used when something goes wrong in coordinating between the UI, database, or state machine, like invalid
+    user actions or missing panels.
+    """
+
 
 class PrayerSelector:
-    """Handles selection and filtering of prayers for display."""
+    """
+    Handles selection and filtering of prayers for display.
+
+    This class picks prayers to show based on rules like category weight and display count, ensuring variety
+    in what users see during a session.
+    """
 
     def __init__(self, db_manager: AppDatabase):
+        """
+        Initialize PrayerSelector with a database manager.
+
+        Args:
+            db_manager (AppDatabase): The database manager to access prayers and categories.
+
+        The displayed_prayers set tracks prayers shown in the current session to avoid repeats.
+        """
         self.db_manager: AppDatabase = db_manager
         self.displayed_prayers: Set[str] = set()  # Track prayers displayed in this session
 
     def reset_session(self) -> None:
-        """Reset displayed prayers for a new session."""
+        """
+        Reset displayed prayers for a new session.
+
+        Clears the set of prayers shown in the current session, so the app can start fresh when selecting prayers.
+        """
         self.displayed_prayers.clear()
 
     def select_past_prayers(self, max_selections: int, current_weight: int) -> List[Prayer]:
-        """Select unanswered prayers from previous sessions,
-        prioritizing the lowest display count with random selection."""
+        """
+        Select unanswered prayers from previous sessions, prioritizing the lowest display count with random
+        selection.
+
+        Args:
+            max_selections (int): Maximum number of prayers to select.
+            current_weight (int): Starting category weight to prioritize (e.g., higher weight categories first).
+
+        Returns:
+            List[Prayer]: A list of selected Prayer objects, up to max_selections.
+
+        This method groups prayers by category weight, picks those shown least often, and randomly selects to keep
+        things varied.
+        """
         today = date.today().strftime("%d-%b-%Y")
         # Get unanswered prayers from previous sessions
         eligible_prayers = [
@@ -77,15 +119,34 @@ class PrayerSelector:
 
         return selected_prayers[:max_selections]
 
+
 class SessionManager:
-    """Manages prayer session data, such as streaks and counts."""
+    """
+    Manages prayer session data, such as streaks and counts.
+
+    Tracks how many prayers are added or answered in a session and calculates the user's prayer streak
+    (consecutive days of praying).
+    """
 
     def __init__(self, session: PrayerSession):
+        """
+        Initialize SessionManager with a PrayerSession object.
+
+        Args:
+            session (PrayerSession): The session object to track prayer counts and streaks.
+
+        Calls update_streak to set the initial streak based on the last prayer date.
+        """
         self.session: PrayerSession = session
         self.update_streak()
 
     def update_streak(self) -> None:
-        """Update the prayer streak based on the last prayer date."""
+        """
+        Update the prayer streak based on the last prayer date.
+
+        Increases the streak if the user prayed yesterday; resets to 1 if not. Stores the current date as the
+        last prayer date.
+        """
         current_date = datetime.now()
         try:
             last_prayer_date = datetime.strptime(self.session.last_prayer_date, '%d-%b-%Y')
@@ -98,10 +159,27 @@ class SessionManager:
             self.session.prayer_streak = 1
         self.session.last_prayer_date = current_date.strftime('%d-%b-%Y')
 
-class AppController:
-    """Coordinates interactions between UI, database, and other components."""
 
-    def __init__(self, db_manager: Optional[AppDatabase] = None, ui_manager: Optional[AppDisplay] = None, states_file: str = "states.json"):
+class AppController:
+    """
+    Coordinates interactions between UI, database, and other components.
+
+    This is the main class that runs the app, connecting user inputs to data updates and managing the flow
+    through states.
+    """
+
+    def __init__(self, db_manager: Optional[AppDatabase] = None, ui_manager: Optional[AppDisplay] = None,
+                 states_file: str = "states.json"):
+        """
+        Initialize AppController with database, UI, and state machine.
+
+        Args:
+            db_manager (Optional[AppDatabase]): The database manager (defaults to a new AppDatabase).
+            ui_manager (Optional[AppDisplay]): The UI manager (defaults to a new AppDisplay).
+            states_file (str): File path for state machine data (defaults to 'states.json').
+
+        Sets up the state machine, prayer selector, and session manager for the app.
+        """
         self.db_manager = db_manager or AppDatabase(states_file=states_file)
         self.ui_manager = ui_manager or AppDisplay()
         self.state_machine: StateMachine = self._initialize_state_machine()
@@ -109,7 +187,17 @@ class AppController:
         self.session_manager: SessionManager = SessionManager(self.db_manager.session)
 
     def _initialize_state_machine(self) -> StateMachine:
-        """Initialize the state machine with data from AppDatabase."""
+        """
+        Initialize the state machine with data from AppDatabase.
+
+        Returns:
+            StateMachine: The initialized state machine with loaded states.
+
+        Raises:
+            AppError: If loading state data fails.
+
+        Loads state transitions from a file to control the app's flow.
+        """
         try:
             state_data = self.db_manager.persistence.load_states()
             return StateMachine(state_data)
@@ -118,7 +206,12 @@ class AppController:
             raise AppError(f"Failed to initialize state machine: {e}")
 
     def run(self) -> None:
-        """Main application loop."""
+        """
+        Main application loop.
+
+        Runs the app by processing states, displaying panels, and handling user actions until the 'done' state
+        is reached.
+        """
         try:
             self.prayer_selector.reset_session()  # Clear displayed prayers at start
             while self.state_machine.current_state and self.state_machine.current_state.name != "done":
@@ -127,7 +220,8 @@ class AppController:
                     action = self.handle_state_action(state)
                     self.state_machine.transition(action)
                 else:
-                    panel = next((p for p in self.db_manager.panel_manager.panels if p.panel_header == state.name), None)
+                    panel = next((p for p in self.db_manager.panel_manager.panels if p.panel_header == state.name),
+                                 None)
                     if not panel:
                         raise AppError(f"No panel found for state {state.name}")
                     self.ui_manager.display_panel(panel)
@@ -141,7 +235,20 @@ class AppController:
             self.quit()
 
     def handle_state_action(self, state: State) -> str:
-        """Handle the action associated with the current state."""
+        """
+        Handle the action associated with the current state.
+
+        Args:
+            state (State): The current state from the state machine.
+
+        Returns:
+            str: The action event to trigger the next state transition.
+
+        Raises:
+            AppError: If the action event is unknown or an error occurs.
+
+        Processes user inputs or actions like continuing, adding prayers, or quitting.
+        """
         try:
             if state.action_event == 'get_continue':
                 response = self.ui_manager.get_response('Press Enter to continue: ')
@@ -164,7 +271,11 @@ class AppController:
             raise AppError(f"Error handling state {state.name}: {e}")
 
     def get_new_prayers(self) -> None:
-        """Collect new prayers from the UI and save them to the database."""
+        """
+        Collect new prayers from the UI and save them to the database.
+
+        Repeatedly asks the user for new prayers until they choose to stop, then saves them.
+        """
         another_prayer = True
         while another_prayer:
             prayer, another_prayer = self.ui_manager.ui_get_new_prayer()
@@ -180,16 +291,25 @@ class AppController:
                 another_prayer = False
 
     def get_past_prayers(self) -> str:
-        """Display past prayers one at a time and allow marking as answered."""
+        """
+        Display past prayers one at a time and allow marking as answered.
+
+        Returns:
+            str: The action event 'get_past_prayers' to continue the state machine.
+
+        Shows a set number of past prayers, updates their display counts, and lets users mark them as answered.
+        """
         display_num = self.db_manager.app_params.past_prayer_display_count
         current_weight = 10  # Start with the highest weight
         continue_displaying = True
 
         while continue_displaying:
-            prayers = self.prayer_selector.select_past_prayers(max_selections=display_num, current_weight=current_weight)
+            prayers = self.prayer_selector.select_past_prayers(max_selections=display_num,
+                                                               current_weight=current_weight)
             if not prayers:
                 self.ui_manager.display_panel(
-                    Panel(0, "No Past Prayers", [PanelPgraph(0, None, "No unanswered past prayers available.")])
+                    Panel(0, "No Past Prayers", [PanelPgraph(0, None,
+                                                             "No unanswered past prayers available.")])
                 )
                 break
 
@@ -226,14 +346,23 @@ class AppController:
         return 'get_past_prayers'
 
     def handle_import(self) -> None:
-        """Placeholder for import logic."""
+        """
+        Placeholder for importing prayer data.
+
+        Currently empty, but will handle loading external prayer data in the future.
+        """
         pass
 
     def quit(self) -> None:
-        """Clean up and exit the application."""
+        """
+        Clean up and exit the application.
+
+        Saves data and closes the UI before stopping the app.
+        """
         self.db_manager.close()
         self.ui_manager.close_ui()
         quit(0)
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
