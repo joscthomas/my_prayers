@@ -215,9 +215,6 @@ class AppController:
                     prayer.answer = response
                     prayer.answer_date = date.today().strftime("%d-%b-%Y")
                     self.session_manager.session.answered_prayer_count += 1
-                    # Remove from answered_prayers since it's now answered
-                    if prayer in self.db_manager.prayer_manager.answered_prayers:
-                        self.db_manager.prayer_manager.answered_prayers.remove(prayer)
 
             if len(prayers) == display_num:
                 response = self.ui_manager.get_response(

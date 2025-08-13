@@ -208,7 +208,6 @@ class PrayerManager:
     def __init__(self, persistence: PersistenceManager):
         self.persistence: PersistenceManager = persistence
         self.prayers: List[Prayer] = []
-        self.answered_prayers: List[Prayer] = []
 
     def load_prayers(self, csv_file: str = "prayers.csv") -> None:
         """Load prayers from CSV and instantiate Prayer objects."""
@@ -236,21 +235,17 @@ class PrayerManager:
                 display_count=display_count
             )
             self.prayers.append(prayer)
-            if prayer.answer_date is None:
-                self.answered_prayers.append(prayer)
 
     def create_prayer(self, prayer: Prayer) -> None:
         """Add a new prayer to the in-memory database."""
         if not isinstance(prayer, Prayer):
             raise DatabaseError(f"Invalid prayer object: {prayer}")
         self.prayers.append(prayer)
-        if prayer.answer_date is None:
-            self.answered_prayers.append(prayer)
         logging.info(f"Created prayer: {prayer.prayer}")
 
     def get_unanswered_prayers(self) -> List[Prayer]:
         """Return a list of unanswered prayers."""
-        return [prayer for prayer in self.answered_prayers if prayer.answer_date is None]
+        return [prayer for prayer in self.prayers if prayer.answer_date is None]
 
     def validate(self) -> bool:
         """Validate loaded prayers."""
@@ -280,14 +275,14 @@ class CategoryManager:
                 self.categories.append(category)
                 json_categories.append(c['name'])
 
-            prayer_categories = set(prayer.category for prayer in self.prayer_manager.answered_prayers)
+            prayer_categories = set(prayer.category for prayer in self.prayer_manager.get_unanswered_prayers())
             unique_categories = [c for c in prayer_categories if c not in json_categories]
             for c in unique_categories:
                 self.categories.append(Category(category=c, count=0, weight=1))
 
             for category in self.categories:
                 category.category_prayer_list = [
-                    prayer for prayer in self.prayer_manager.answered_prayers
+                    prayer for prayer in self.prayer_manager.get_unanswered_prayers()
                     if prayer.category == category.category
                 ]
 
@@ -310,8 +305,8 @@ class CategoryManager:
         if not self.prayer_manager.prayers:
             logging.error("No prayers loaded")
             return False
-        if not self.prayer_manager.answered_prayers:
-            logging.error("No past prayers loaded")
+        if not self.prayer_manager.get_unanswered_prayers():
+            logging.error("No unanswered prayers loaded")
             return False
         if not os.path.exists(self.persistence.categories_file):
             logging.error("No categories.json file")
@@ -383,11 +378,6 @@ class AppDatabase:
                 logging.error(f"Invalid Prayer object missing _category: {prayer}")
                 raise DatabaseError("Loaded Prayer object missing _category attribute")
         logging.info(f"Loaded {len(self.prayer_manager.prayers)} Prayer instances.")
-        self.prayer_manager.answered_prayers = [prayer for prayer in self.prayer_manager.prayers if
-                                                prayer.answer_date is None]
-        logging.info(f"Computed {len(self.prayer_manager.answered_prayers)} unanswered Prayer instances.")
-        self.category_manager.categories = data.get('Category_instances', [])
-        logging.info(f"Loaded {len(self.category_manager.categories)} Category instances.")
         sessions = data.get('Session_instances', [])
         logging.info(f"Loaded {len(sessions)} Session instances.")
         if sessions:
