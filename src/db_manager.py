@@ -21,9 +21,13 @@ class DatabaseError(Exception):
 class PersistenceManager:
     """Handles file I/O operations for persistence (pickle, JSON, CSV)."""
 
-    def __init__(self, data_dir: str = "../data", pickle_file: str = "objects.pkl",
+    def __init__(self, data_dir: str = None, pickle_file: str = "objects.pkl",
                  params_file: str = "params.json", categories_file: str = "categories.json",
                  states_file: str = "states.json"):
+        # Set data_dir to project_root/data if not provided
+        if data_dir is None:
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            data_dir = os.path.join(project_root, "data")
         self.data_dir: str = data_dir
         self.pickle_file: str = os.path.join(data_dir, pickle_file)
         self.params_file: str = os.path.join(data_dir, params_file)
@@ -317,10 +321,14 @@ class CategoryManager:
 class AppDatabase:
     """Coordinates database operations for the My Prayers application."""
 
-    def __init__(self, data_dir: str = "../data", pickle_file: str = "objects.pkl",
+    def __init__(self, data_dir: str = None, pickle_file: str = "objects.pkl",
                  params_file: str = "params.json", categories_file: str = "categories.json",
                  panels_file: str = "panels.csv", prayers_file: str = "prayers.csv",
                  states_file: str = "states.json"):
+        # Set data_dir to project_root/data if not provided
+        if data_dir is None:
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            data_dir = os.path.join(project_root, "data")
         self.persistence: PersistenceManager = PersistenceManager(data_dir, pickle_file, params_file,
                                                                   categories_file, states_file)
         self.app_params: AppParams = self._load_params()

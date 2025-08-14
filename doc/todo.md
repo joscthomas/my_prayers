@@ -228,3 +228,23 @@
   - Priority: Medium
   - Status: Open
   - Description: Update AppDatabase.close to ensure PersistenceManager.save_pickle is called to fix test_app_database_close failure.
+- WT016-001: Remove answered_prayers list from PrayerManager
+  - Type: Refactor
+  - Priority: High
+  - Status: Complete
+  - Description: Remove the answered_prayers list from PrayerManager in db_manager.py, update load_prayers and create_prayer to not populate it, and modify get_unanswered_prayers to filter prayers where answer_date is None.
+- WT016-002: Update get_past_prayers in app_controller.py
+  - Type: Refactor
+  - Priority: High
+  - Status: Complete
+  - Description: Remove logic in get_past_prayers that removes prayers from answered_prayers when marked as answered, as answered_prayers list is deprecated.
+- WT016-003: Test removal of answered_prayers list
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Add unit tests to verify that removing answered_prayers from PrayerManager does not affect functionality and that get_unanswered_prayers correctly filters prayers with answer_date is None.
+- TD001: Handle missing params.json
+  - Type: Enhancement
+  - Priority: Medium
+  - Status: Open
+  - Description: In AppDatabase._load_params, add logic to create a default params.json with minimal required fields if the file is missing.

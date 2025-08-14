@@ -104,8 +104,8 @@ class SessionManager:
 class AppController:
     """Coordinates interactions between UI, database, and other components."""
 
-    def __init__(self, states_file: str = "states.json"):
-        self.db_manager: AppDatabase = AppDatabase(states_file=states_file)
+    def __init__(self, states_file: str = "states.json", db_manager: Optional[AppDatabase] = None):
+        self.db_manager: AppDatabase = db_manager if db_manager is not None else AppDatabase(states_file=states_file)
         self.ui_manager: AppDisplay = AppDisplay()
         self.state_machine: StateMachine = self._initialize_state_machine()
         self.prayer_selector: PrayerSelector = PrayerSelector(self.db_manager)

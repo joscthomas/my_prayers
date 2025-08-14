@@ -124,6 +124,43 @@ def test_prayer_manager_create_prayer(mock_app_database):
     mock_app_database.prayer_manager.create_prayer(prayer)
     assert prayer in mock_app_database.prayer_manager.prayers
 
+def test_prayer_manager_get_unanswered_prayers(mock_app_database):
+    prayer1 = Prayer("Prayer 1", category="Personal", create_date="01-Jan-2025")
+    prayer2 = Prayer("Prayer 2", category="Family", create_date="01-Jan-2025", answer_date="02-Jan-2025", answer="Answered")
+    mock_app_database.prayer_manager.prayers = [prayer1, prayer2]
+    unanswered = mock_app_database.prayer_manager.get_unanswered_prayers()
+    assert len(unanswered) == 1
+    assert unanswered[0] == prayer1
+    assert prayer2 not in unanswered
+
+def test_prayer_manager_get_unanswered_prayers_empty(mock_app_database):
+    mock_app_database.prayer_manager.prayers = []
+    unanswered = mock_app_database.prayer_manager.get_unanswered_prayers()
+    assert len(unanswered) == 0
+
+def test_prayer_manager_load_prayers_with_answered(mock_app_database):
+    mock_df = pd.DataFrame({
+        "prayer": ["Test prayer 1", "Test prayer 2"],
+        "category": ["Personal", "Family"],
+        "create_date": ["01-Jan-2025", "01-Jan-2025"],
+        "answer_date": [None, "02-Jan-2025"],
+        "answer": [None, "Answered"],
+        "display_count": [0, 1]
+    })
+    with patch("my_prayers_project.src.db_manager.PersistenceManager.load_csv", return_value=mock_df):
+        mock_app_database.prayer_manager.load_prayers("prayers.csv")
+    assert len(mock_app_database.prayer_manager.prayers) == 2
+    unanswered = mock_app_database.prayer_manager.get_unanswered_prayers()
+    assert len(unanswered) == 1
+    assert unanswered[0].prayer == "Test prayer 1"
+
+def test_prayer_manager_create_prayer_unanswered(mock_app_database):
+    prayer = Prayer("Test prayer", category="Personal", create_date="01-Jan-2025")
+    mock_app_database.prayer_manager.create_prayer(prayer)
+    unanswered = mock_app_database.prayer_manager.get_unanswered_prayers()
+    assert len(unanswered) == 1
+    assert unanswered[0] == prayer
+
 # CategoryManager Tests
 def test_category_manager_load_categories(mock_app_database):
     mock_data = {"categories": [{"name": "Personal", "weight": 2}]}

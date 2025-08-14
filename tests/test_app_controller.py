@@ -3,13 +3,61 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from datetime import date, datetime, timedelta
+import os
+import shutil
+import json
+import pandas as pd
 from typing import List
 from ..src.app_controller import PrayerSelector, SessionManager, AppController, AppError
 from ..src.mpo_model import Prayer, Category, PrayerSession, State, StateMachine, AppParams
 from ..src.db_manager import AppDatabase, PrayerManager, CategoryManager
 
+
 @pytest.fixture
-def mock_db():
+def setup_data_dir(tmp_path):
+    """Set up test data directory, copying from project data or creating defaults."""
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_data_dir = os.path.join(project_root, "data")
+    test_data_dir = tmp_path / "data"
+    test_data_dir.mkdir()
+
+    required_files = {
+        "params.json": {
+            'id': '1', 'id_desc': 'App ID', 'app': 'My Prayers', 'app_desc': 'Prayer app',
+            'install_path': '/app', 'install_path_desc': 'Install path',
+            'data_file_path': '/data', 'data_file_path_desc': 'Data path',
+            'past_prayer_display_count': 2, 'past_prayer_display_count_desc': 'Display count'
+        },
+        "categories.json": {"categories": [{"name": "Personal", "weight": 2}, {"name": "Family", "weight": 1}]},
+        "states.json": [{"name": "WELCOME", "action_event": "get_continue", "to_state": "HONOR GOD"}],
+        "panels.csv": pd.DataFrame([{
+            "panel_set": 1, "panel_seq": 1, "header": "Welcome", "pgraph_seq": 1, "verse": None, "text": "Welcome text"
+        }]),
+        "prayers.csv": pd.DataFrame([{
+            "prayer": "Test prayer", "create_date": "01-Jan-2025", "answer_date": None,
+            "category": "Personal", "answer": None, "display_count": 0
+        }])
+    }
+
+    # Copy files from project data directory if it exists
+    if os.path.exists(project_data_dir):
+        shutil.copytree(project_data_dir, test_data_dir, dirs_exist_ok=True)
+
+    # Ensure all required files exist, creating defaults if missing
+    for file_name, content in required_files.items():
+        file_path = test_data_dir / file_name
+        if not file_path.exists():
+            if file_name.endswith(".json"):
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    json.dump(content, f, indent=4)
+            elif file_name.endswith(".csv"):
+                content.to_csv(file_path, index=False)
+
+    return str(test_data_dir)
+
+
+@pytest.fixture
+def mock_db(setup_data_dir):
     db = MagicMock(spec=AppDatabase)
     db.app_params = AppParams({
         'id': '1', 'id_desc': 'App ID', 'app': 'My Prayers', 'app_desc': 'Prayer app',
@@ -22,15 +70,25 @@ def mock_db():
     db.prayer_manager.prayers = []
     db.category_manager = MagicMock(spec=CategoryManager)
     db.category_manager.categories = []
+    db.persistence = MagicMock()
+    db.persistence.data_dir = setup_data_dir
+    db.persistence.params_file = os.path.join(setup_data_dir, "params.json")
+    db.persistence.categories_file = os.path.join(setup_data_dir, "categories.json")
+    db.persistence.states_file = os.path.join(setup_data_dir, "states.json")
+    db.persistence.panels_file = os.path.join(setup_data_dir, "panels.csv")
+    db.persistence.prayers_file = os.path.join(setup_data_dir, "prayers.csv")
     return db
+
 
 @pytest.fixture
 def prayer_selector(mock_db):
     return PrayerSelector(mock_db)
 
+
 @pytest.fixture
 def session_manager(mock_db):
     return SessionManager(mock_db.session)
+
 
 # PrayerSelector Tests
 def test_prayer_selector_select_past_prayers(prayer_selector, mock_db):
@@ -42,10 +100,12 @@ def test_prayer_selector_select_past_prayers(prayer_selector, mock_db):
     assert len(prayers) <= 2
     assert all(p in [prayer1, prayer2] for p in prayers)
 
+
 def test_prayer_selector_reset_session(prayer_selector):
     prayer_selector.displayed_prayers.add("Prayer 1")
     prayer_selector.reset_session()
     assert len(prayer_selector.displayed_prayers) == 0
+
 
 # SessionManager Tests
 def test_session_manager_update_streak(session_manager):
@@ -54,25 +114,28 @@ def test_session_manager_update_streak(session_manager):
     assert session_manager.session.prayer_streak == 2
     assert session_manager.session.last_prayer_date == datetime.now().strftime("%d-%b-%Y")
 
+
 # AppController Tests
 def test_app_controller_handle_state_action_get_continue(mock_db):
-    app_controller = AppController()
+    app_controller = AppController(db_manager=mock_db)  # Pass mock_db directly
     app_controller.ui_manager = MagicMock()
     state = State(name="WELCOME", action_event="get_continue", to_state="HONOR GOD")
     with patch.object(app_controller.ui_manager, "get_response", return_value=""):
         action = app_controller.handle_state_action(state)
     assert action == "get_continue"
 
+
 def test_app_controller_get_new_prayers(mock_db):
-    app_controller = AppController()
+    app_controller = AppController(db_manager=mock_db)  # Pass mock_db directly
     app_controller.ui_manager = MagicMock()
     app_controller.ui_manager.ui_get_new_prayer.return_value = (Prayer("Test prayer", category="Personal"), True)
     app_controller.get_new_prayers()
     mock_db.create_prayer.assert_called_once()
     assert mock_db.session.new_prayer_added_count == 1
 
+
 def test_app_controller_get_past_prayers(mock_db):
-    app_controller = AppController()
+    app_controller = AppController(db_manager=mock_db)  # Pass mock_db directly
     app_controller.ui_manager = MagicMock()
     app_controller.prayer_selector = MagicMock()
     prayer = Prayer("Test prayer", category="Personal")
@@ -82,10 +145,12 @@ def test_app_controller_get_past_prayers(mock_db):
     assert prayer.display_count == 1
     assert mock_db.session.past_prayer_prayed_count == 1
 
+
 def test_app_controller_quit(mock_db):
-    app_controller = AppController()
+    app_controller = AppController(db_manager=mock_db)  # Pass mock_db directly
     app_controller.ui_manager = MagicMock()
     with pytest.raises(SystemExit):
         app_controller.quit()
     mock_db.close.assert_called_once()
+    # noinspection PyUnresolvedReferences
     app_controller.ui_manager.close_ui.assert_called_once()
