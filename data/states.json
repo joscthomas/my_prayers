@@ -1,8 +1,8 @@
 [
-    {"name": "WELCOME", "action_event": "get_continue", "to_state": "HONOR GOD","auto_trigger": false},
-    {"name": "HONOR GOD", "action_event": "get_continue", "to_state": "MY CONCERNS","auto_trigger": false},
-    {"name": "MY CONCERNS", "action_event": "get_new_prayers", "to_state": "prayers_done","auto_trigger": false},
-    {"name": "prayers_done", "action_event": "get_past_prayers", "to_state": "GOD'S WILL","auto_trigger": true},
-    {"name": "GOD'S WILL", "action_event": "get_continue", "to_state": "CLOSING","auto_trigger": false},
-    {"name": "CLOSING", "action_event": "quit_app", "to_state": "done","auto_trigger": false}
+    {"state": "1", "action_event": "get_continue", "to_state": "2","auto_trigger": false},
+    {"state": "2", "action_event": "get_continue", "to_state": "3","auto_trigger": false},
+    {"state": "3", "action_event": "get_new_prayers", "to_state": "4","auto_trigger": false},
+    {"state": "4", "action_event": "get_past_prayers", "to_state": "5","auto_trigger": true},
+    {"state": "5", "action_event": "get_continue", "to_state": "6","auto_trigger": false},
+    {"state": "6", "action_event": "quit_app", "to_state": "done","auto_trigger": false}
 ]

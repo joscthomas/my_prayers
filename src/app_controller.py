@@ -94,65 +94,64 @@ class SessionManager:
             yesterday = current_date - timedelta(days=1)
             if yesterday.date() == last_prayer_date.date():
                 self.session.prayer_streak += 1
-            else:
+            elif last_prayer_date.date() < yesterday.date():
                 self.session.prayer_streak = 1
-        except (ValueError, TypeError):
+            else:
+                self.session.prayer_streak = 1  # Same day, streak remains or starts
+        except (TypeError, ValueError):
             self.session.prayer_streak = 1
-        self.session.last_prayer_date = current_date.strftime('%d-%b-%Y')
 
 
 class AppController:
-    """Coordinates interactions between UI, database, and other components."""
+    """Coordinates the application logic (Controller in MVC)."""
 
-    def __init__(self, states_file: str = "states.json", db_manager: Optional[AppDatabase] = None):
-        self.db_manager: AppDatabase = db_manager if db_manager is not None else AppDatabase(states_file=states_file)
-        self.ui_manager: AppDisplay = AppDisplay()
+    def __init__(self):
+        self.db_manager = AppDatabase()
+        self.ui_manager = AppDisplay()
+        self.prayer_selector = PrayerSelector(self.db_manager)
+        self.session_manager = SessionManager(self.db_manager.session)
         self.state_machine: StateMachine = self._initialize_state_machine()
-        self.prayer_selector: PrayerSelector = PrayerSelector(self.db_manager)
-        self.session_manager: SessionManager = SessionManager(self.db_manager.session)
+        self.last_displayed_panel_seq: int = 0
 
     def _initialize_state_machine(self) -> StateMachine:
-        """Initialize the state machine with data from AppDatabase."""
-        try:
-            state_data = self.db_manager.persistence.load_states()
-            return StateMachine(state_data)
-        except Exception as e:
-            logging.error(f"Failed to initialize state machine: {e}")
-            raise AppError(f"Failed to initialize state machine: {e}")
+        """Initialize the state machine from JSON data."""
+        states_data = self.db_manager.persistence.load_json(self.db_manager.persistence.states_file)
+        return StateMachine(states_data)
 
     def run(self) -> None:
         """Main application loop."""
+        self.prayer_selector.reset_session()
+        self.last_displayed_panel_seq = 0
         try:
-            self.prayer_selector.reset_session()  # Clear displayed prayers at start
-            while self.state_machine.current_state and self.state_machine.current_state.name != "done":
+            while self.state_machine.current_state:
                 state = self.state_machine.current_state
                 if state.auto_trigger:
-                    action = self.handle_state_action(state)
-                    self.state_machine.transition(action)
+                    action_response = self.handle_state_action(state)
                 else:
-                    panel = next((p for p in self.db_manager.panel_manager.panels if p.panel_header == state.name),
-                                 None)
-                    if not panel:
-                        raise AppError(f"No panel found for state {state.name}")
-                    self.ui_manager.display_panel(panel)
-                    action = self.handle_state_action(state)
-                    self.state_machine.transition(action)
+                    # Display panel for non-auto-trigger states
+                    panel = self.get_next_panel(state.state)
+                    if panel is None:
+                        raise AppError(f"No panel found after seq {self.last_displayed_panel_seq} for state {state.state}")
+                    header = self.ui_manager.display_panel(panel)
+                    self.last_displayed_panel_seq = panel.panel_seq
+                    # Prompt only for get_continue action
+                    if state.action_event == 'get_continue':
+                        self.ui_manager.get_response('Press Enter to continue: ')
+                    # Directly call handle_state_action for other non-auto-trigger states
+                    action_response = self.handle_state_action(state)
+                next_state = self.state_machine.transition(action_response)
+                if next_state is None:
+                    break
         except (AppError, ModelError) as e:
             logging.error(f"Application error: {e}")
             self.quit()
-        except Exception as e:
-            logging.error(f"Unexpected error: {e}")
+        finally:
             self.quit()
 
-    def handle_state_action(self, state: State) -> str:
-        """Handle the action associated with the current state."""
+    def handle_state_action(self, state: State, response: Optional[str] = None) -> str:
+        """Handle actions based on the current state."""
         try:
             if state.action_event == 'get_continue':
-                response = self.ui_manager.get_response('Press Enter to continue: ')
-                if response == 'import':
-                    self.handle_import()
-                elif response == 'export':
-                    self.db_manager.export()
                 return 'get_continue'
             elif state.action_event == 'get_new_prayers':
                 self.get_new_prayers()
@@ -165,7 +164,7 @@ class AppController:
                 return 'quit_app'
             raise AppError(f"Unknown action event: {state.action_event}")
         except Exception as e:
-            raise AppError(f"Error handling state {state.name}: {e}")
+            raise AppError(f"Error handling state {state.state}: {e}")
 
     def get_new_prayers(self) -> None:
         """Collect new prayers from the UI and save them to the database."""
@@ -230,6 +229,16 @@ class AppController:
     def handle_import(self) -> None:
         """Placeholder for import logic."""
         pass
+
+    def get_next_panel(self, state: str) -> Optional[Panel]:
+        """Get the next panel for the given state."""
+        panels = self.db_manager.panel_manager.panels
+        for panel in panels:
+            if panel.panel_seq > self.last_displayed_panel_seq:
+                self.last_displayed_panel_seq = panel.panel_seq
+                return panel
+        return None
+
 
     def quit(self) -> None:
         """Clean up and exit the application."""

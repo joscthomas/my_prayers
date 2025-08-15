@@ -47,6 +47,10 @@
         {
             "name": "trc",
             "weight": 1
+        },
+        {
+            "name": "General",
+            "weight": 1
         }
     ]
 }

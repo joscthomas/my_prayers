@@ -115,14 +115,10 @@ class Panel:
     def __init__(self, panel_seq: int, panel_header: str, pgraph_list: List['PanelPgraph']):
         if panel_seq < 0:
             raise ModelError("Panel sequence cannot be negative")
-        if not panel_header:
-            raise ModelError("Panel header cannot be empty")
-        if not all(isinstance(p, PanelPgraph) for p in pgraph_list):
-            raise ModelError("All items in pgraph_list must be PanelPgraph objects")
 
         self._panel_seq: int = panel_seq
         self._panel_header: str = panel_header
-        self._pgraph_list: List[PanelPgraph] = pgraph_list
+        self._pgraph_list: List['PanelPgraph'] = pgraph_list or []
 
     @property
     def panel_seq(self) -> int:
@@ -138,17 +134,15 @@ class Panel:
 
 
 class PanelPgraph:
-    """Represents a paragraph of text for a Panel."""
+    """Represents a paragraph in a Panel, with optional verse and text."""
 
-    def __init__(self, pgraph_seq: int, verse: Optional[str], text: str):
+    def __init__(self, pgraph_seq: int, verse: Optional[str] = None, text: Optional[str] = None):
         if pgraph_seq < 0:
             raise ModelError("Paragraph sequence cannot be negative")
-        if not text:
-            raise ModelError("Paragraph text cannot be empty")
 
         self._pgraph_seq: int = pgraph_seq
         self._verse: Optional[str] = verse
-        self._text: str = text
+        self._text: Optional[str] = text
 
     @property
     def pgraph_seq(self) -> int:
@@ -159,33 +153,26 @@ class PanelPgraph:
         return self._verse
 
     @property
-    def text(self) -> str:
+    def text(self) -> Optional[str]:
         return self._text
 
 
 class AppParams:
-    """Stores global application parameters from params.json."""
+    """Represents application parameters."""
 
-    def __init__(self, params_dict: Dict):
-        required_keys = [
-            'id', 'id_desc', 'app', 'app_desc',
-            'install_path', 'install_path_desc', 'data_file_path', 'data_file_path_desc',
-            'past_prayer_display_count', 'past_prayer_display_count_desc'
-        ]
-        if not all(key in params_dict for key in required_keys):
-            missing = [key for key in required_keys if key not in params_dict]
-            raise ModelError(f"Missing required parameters: {missing}")
-
-        self._id: str = params_dict['id']
-        self._id_desc: str = params_dict['id_desc']
-        self._app: str = params_dict['app']
-        self._app_desc: str = params_dict['app_desc']
-        self._install_path: str = params_dict['install_path']
-        self._install_path_desc: str = params_dict['install_path_desc']
-        self._data_file_path: str = params_dict['data_file_path']
-        self._data_file_path_desc: str = params_dict['data_file_path_desc']
-        self._past_prayer_display_count: int = params_dict['past_prayer_display_count']
-        self._past_prayer_display_count_desc: str = params_dict['past_prayer_display_count_desc']
+    def __init__(self, id: str, id_desc: str, app: str, app_desc: str, install_path: str,
+                 install_path_desc: str, data_file_path: str, data_file_path_desc: str,
+                 past_prayer_display_count: int, past_prayer_display_count_desc: str):
+        self._id: str = id
+        self._id_desc: str = id_desc
+        self._app: str = app
+        self._app_desc: str = app_desc
+        self._install_path: str = install_path
+        self._install_path_desc: str = install_path_desc
+        self._data_file_path: str = data_file_path
+        self._data_file_path_desc: str = data_file_path_desc
+        self._past_prayer_display_count: int = past_prayer_display_count
+        self._past_prayer_display_count_desc: str = past_prayer_display_count_desc
 
     @property
     def id(self) -> str:
@@ -229,21 +216,42 @@ class AppParams:
 
 
 class PrayerSession:
-    """Tracks details about a prayer session."""
+    """Represents a session of prayer activity."""
 
-    def __init__(self, session_date: Optional[str] = None, last_prayer_date: Optional[str] = None,
-                 prayer_streak: int = 0, last_panel_set: Optional[str] = None):
-        self._session_date: str = session_date or date.today().strftime("%d-%b-%Y")
-        self._new_prayer_added_count: int = 0
-        self._past_prayer_prayed_count: int = 0
-        self._answered_prayer_count: int = 0
+    def __init__(self, last_prayer_date: Optional[str] = None, prayer_streak: int = 0,
+                 last_panel_set: Optional[str] = None):
         self._last_prayer_date: Optional[str] = last_prayer_date
         self._prayer_streak: int = prayer_streak if prayer_streak >= 0 else 0
         self._last_panel_set: Optional[str] = last_panel_set
+        self._new_prayer_added_count: int = 0
+        self._past_prayer_prayed_count: int = 0
+        self._answered_prayer_count: int = 0
 
     @property
-    def session_date(self) -> str:
-        return self._session_date
+    def last_prayer_date(self) -> Optional[str]:
+        return self._last_prayer_date
+
+    @last_prayer_date.setter
+    def last_prayer_date(self, value: Optional[str]):
+        self._last_prayer_date = value
+
+    @property
+    def prayer_streak(self) -> int:
+        return self._prayer_streak
+
+    @prayer_streak.setter
+    def prayer_streak(self, value: int):
+        if value < 0:
+            raise ModelError("Prayer streak cannot be negative")
+        self._prayer_streak = value
+
+    @property
+    def last_panel_set(self) -> Optional[str]:
+        return self._last_panel_set
+
+    @last_panel_set.setter
+    def last_panel_set(self, value: Optional[str]):
+        self._last_panel_set = value
 
     @property
     def new_prayer_added_count(self) -> int:
@@ -275,62 +283,24 @@ class PrayerSession:
             raise ModelError("Answered prayer count cannot be negative")
         self._answered_prayer_count = value
 
-    @property
-    def last_prayer_date(self) -> Optional[str]:
-        return self._last_prayer_date
-
-    @last_prayer_date.setter
-    def last_prayer_date(self, value: Optional[str]):
-        self._last_prayer_date = value
-
-    @property
-    def prayer_streak(self) -> int:
-        return self._prayer_streak
-
-    @prayer_streak.setter
-    def prayer_streak(self, value: int):
-        if value < 0:
-            raise ModelError("Prayer streak cannot be negative")
-        self._prayer_streak = value
-
-    @property
-    def last_panel_set(self) -> Optional[str]:
-        return self._last_panel_set
-
-    @last_panel_set.setter
-    def last_panel_set(self, value: Optional[str]):
-        self._last_panel_set = value
-
 
 class State:
     """Represents a state in the application's state machine."""
 
-    def __init__(self, name: str, action_event: str, to_state: Optional[str] = None,
-                 auto_trigger: Optional[bool] = False) -> None:
-        """
-        Initialize a state.
-
-        Args:
-            name (str): Name of the state.
-            action_event (str): Event that triggers this state.
-            to_state (Optional[str]): Target state for the transition.
-            auto_trigger (str): Whether the action_event should be triggered automatically (True or False).
-
-        Raises:
-            ModelError: If name or action_event is empty.
-        """
-        if not name:
-            raise ModelError("State name cannot be empty")
+    def __init__(self, state: str, action_event: str, to_state: Optional[str] = None, auto_trigger: bool = False):
+        if not state:
+            raise ModelError("State cannot be empty")
         if not action_event:
             raise ModelError("Action event cannot be empty")
-        self._name: str = name
+
+        self._state: str = state
         self._action_event: str = action_event
         self._to_state: Optional[str] = to_state
         self._auto_trigger: bool = auto_trigger
 
     @property
-    def name(self) -> str:
-        return self._name
+    def state(self) -> str:
+        return self._state
 
     @property
     def action_event(self) -> str:
@@ -354,7 +324,7 @@ class StateMachine:
 
         Args:
             states_data (List[Dict]): List of dictionaries with state data
-                                     (e.g., [{"name": "WELCOME", "action_event": "get_continue", "to_state": "HONOR GOD", "auto_trigger": "False"}, ...]).
+                                     (e.g., [{"state": "1", "action_event": "get_continue", "to_state": "2", "auto_trigger": False}, ...]).
 
         Raises:
             ModelError: If states_data is empty or validation fails.
@@ -364,10 +334,10 @@ class StateMachine:
 
         self._states: List[State] = []
         for data in states_data:
-            if not all(key in data for key in ['name', 'action_event']):
+            if not all(key in data for key in ['state', 'action_event']):
                 raise ModelError(f"Invalid state data: Missing required fields in {data}")
             state = State(
-                name=data['name'],
+                state=data['state'],
                 action_event=data['action_event'],
                 to_state=data.get('to_state'),
                 auto_trigger=data.get('auto_trigger', False)
@@ -379,9 +349,9 @@ class StateMachine:
 
     def validate(self) -> bool:
         """Validate the state machine configuration."""
-        required_states = {'WELCOME', 'HONOR GOD', 'MY CONCERNS', 'prayers_done', "GOD'S WILL", 'CLOSING'}
+        required_states = {'1', '2', '3', '4', '5', '6'}
         required_actions = {'get_new_prayers', 'get_past_prayers', 'quit_app', 'get_continue'}
-        state_names = {state.name for state in self._states}
+        state_names = {state.state for state in self._states}
         action_events = {state.action_event for state in self._states}
         missing_states = required_states - state_names
         missing_actions = required_actions - action_events
@@ -405,10 +375,10 @@ class StateMachine:
             ModelError: If no valid transition exists.
         """
         for state in self._states:
-            if state.name == self._current_state.name and state.action_event == action_event:
-                self._current_state = next((s for s in self._states if s.name == state.to_state), None)
+            if state.state == self._current_state.state and state.action_event == action_event:
+                self._current_state = next((s for s in self._states if s.state == state.to_state), None)
                 return self._current_state
-        raise ModelError(f"No valid transition for action {action_event} from state {self._current_state.name}")
+        raise ModelError(f"No valid transition for action {action_event} from state {self._current_state.state}")
 
     @property
     def current_state(self) -> Optional[State]:

@@ -67,128 +67,8 @@
   - Type: Bug Fix
   - Priority: High
   - Status: Complete
-  - Description: Update PrayerManager.load_prayers to read display_count from CSV and ensure AppDatabase._load_from_pickle preserves it.
-- WT007-002: Verify display_count increment in app_controller.py
-  - Type: Verification
-  - Priority: Medium
-  - Status: Complete
-  - Description: Confirm get_past_prayers correctly increments Prayer.display_count.
-- WT007-003: Test Prayer.display_count persistence
-  - Type: Testing
-  - Priority: Medium
-  - Status: Complete
-  - Description: Add unit tests to verify Prayer.display_count persists across sessions.
-- WT008-001: Move Category.category_display_count increment to app_controller.py
-  - Type: Refactor
-  - Priority: High
-  - Status: Complete
-  - Description: Move increment of Category.category_display_count from ui_manager.py to app_controller.py in get_past_prayers.
-- WT008-002: Update ui_manager.py to remove category increment
-  - Type: Refactor
-  - Priority: High
-  - Status: Complete
-  - Description: Remove categories parameter and increment logic from display_prayer in ui_manager.py.
-- WT008-003: Test consolidated display count increments
-  - Type: Testing
-  - Priority: Medium
-  - Status: Complete
-  - Description: Add unit tests to verify Prayer.display_count and Category.category_display_count increment correctly in app_controller.py.
-- WT009-001: Test UML diagram generation in PyCharm
-  - Type: Testing
-  - Priority: Medium
-  - Status: Open
-  - Description: Verify that added type hints in mpo_model.py, app_controller.py, db_manager.py, and ui_manager.py correctly generate UML class diagrams in PyCharm, showing associations and compositions.
-- WT009-002: Verify type hint compatibility with Python 3.11
-  - Type: Testing
-  - Priority: Medium
-  - Status: Open
-  - Description: Ensure type hints are compatible with Python 3.11 and do not cause runtime errors.
-- WT009-003: Add unit tests for type hint validation
-  - Type: Testing
-  - Priority: Medium
-  - Status: Open
-  - Description: Create unit tests to validate type hints using mypy or PyCharm's type checker.
-- WT010-001: Review __init__.py for package initialization
-  - Type: Review
-  - Priority: Low
-  - Status: Open
-  - Description: Evaluate if src/__init__.py should include package-level imports or configuration for future enhancements.
-- WT010-002: Update type hints for AppDatabase.session
-  - Type: Enhancement
-  - Priority: Medium
-  - Status: Open
-  - Description: Add explicit type hint `session: PrayerSession` in `AppDatabase.__init__` to clarify usage.
-- WT010-003: Test session attribute access
-  - Type: Testing
-  - Priority: Medium
-  - Status: Open
-  - Description: Add unit tests to verify `session` access in `AppDatabase` and `PanelManager` after fixing references.
-- WT011-001: Add properties for protected attributes in AppParams
-  - Type: Refactor
-  - Priority: High
-  - Status: Complete
-  - Description: Add public properties for `_id`, `_id_desc`, `_app`, `_app_desc`, `_install_path`, `_install_path_desc`, `_data_file_path`, `_data_file_path_desc`, `_past_prayer_display_count`, and `_past_prayer_display_count_desc` in `AppParams` to resolve protected access errors.
-- WT011-002: Test protected attribute access fixes
-  - Type: Testing
-  - Priority: Medium
-  - Status: Open
-  - Description: Add unit tests to verify that `AppDatabase.close` correctly uses `AppParams` properties and serializes `params.json` without errors.
-- WT012-001: Test updated PrayerSession constructor
-  - Type: Testing
-  - Priority: Medium
-  - Status: Open
-  - Description: Add unit tests to verify that `PrayerSession` constructor correctly initializes `last_prayer_date`, `prayer_streak`, and `last_panel_set` in `AppDatabase._load_from_pickle`.
-- T013: Test save_pickle BinaryIO type hint fix
-  - Type: Testing
-  - Priority: Medium
-  - Status: Open
-  - Description: Add unit tests to verify that the BinaryIO type hint in PersistenceManager.save_pickle resolves the type error and ensures pickle.dump works correctly. Include a test case for runtime behavior with pickle.dump.
-- T014: Review export method for static conversion
-  - Type: Review
-  - Priority: Low
-  - Status: Open
-  - Description: Evaluate if PersistenceManager.export should be static after implementing export logic, as it may require instance state (e.g., prayers, panels).
-- T015: Review close_ui method for static conversion
-  - Type: Review
-  - Priority: Low
-  - Status: Open
-  - Description: Evaluate if AppDisplay.close_ui should be static after implementing GUI logic, as it may require instance state (e.g., GUI window resources).
-- T016: Test AppDatabase session initialization fix
-  - Type: Testing
-  - Priority: Medium
-  - Status: Open
-  - Description: Add unit tests to verify that AppDatabase.session is initialized before PanelManager access, preventing AttributeError during initialization.
-- T017: Test AppDatabase _load_params implementation
-  - Type: Testing
-  - Priority: Medium
-  - Status: Open
-  - Description: Add unit tests to verify that AppDatabase._load_params correctly loads params.json and initializes AppParams without errors.
-- T018: Refine load_pickle return type
-  - Type: Enhancement
-  - Priority: Medium
-  - Status: Complete
-  - Description: Update PersistenceManager.load_pickle return type to `Dict[str, List[Any]]` to clarify structure and improve type safety.
-- T019: Add unit tests for refined load_pickle type
-  - Type: Testing
-  - Priority: Medium
-  - Status: Open
-  - Description: Add pytest tests to verify PersistenceManager.load_pickle returns expected dictionary structure with correct types (e.g., Prayer lists).
-- WT013-001: Implement comprehensive tests for mpo_model.py
-  - Type: Testing
-  - Priority: Medium
-  - Status: Complete
-  - Description: Add pytest tests for Prayer, Category, Panel, PanelPgraph, AppParams, PrayerSession, State, and StateMachine to cover constructor, property setters, and validation logic.
-- WT013-002: Implement comprehensive tests for db_manager.py
-  - Type: Testing
-  - Priority: Medium
-  - Status: Complete
-  - Description: Add pytest tests for PersistenceManager, PanelManager, PrayerManager, CategoryManager, and AppDatabase to cover file I/O, CRUD operations, and initialization.
-- WT013-003: Implement comprehensive tests for ui_manager.py
-  - Type: Testing
-  - Priority: Medium
-  - Status: Complete
-  - Description: Add pytest tests for AppDisplay to cover panel display, user input, prayer creation, and answer collection.
-- WT013-004: Implement comprehensive tests for app_controller.py
+  - Description: Ensure Prayer.display_count is persisted correctly in db_manager.py when saving to pickle.
+- T019: Add unit tests for core components
   - Type: Testing
   - Priority: Medium
   - Status: Complete
@@ -227,7 +107,7 @@
   - Type: Bug Fix
   - Priority: Medium
   - Status: Open
-  - Description: Update AppDatabase.close to ensure PersistenceManager.save_pickle is called to fix test_app_database_close failure.
+  - Description: Update AppDatabase.close to ensure PersistenceManager.save_pickle is called to fix test failures in test_app_database_close.
 - WT016-001: Remove answered_prayers list from PrayerManager
   - Type: Refactor
   - Priority: High
@@ -248,3 +128,63 @@
   - Priority: Medium
   - Status: Open
   - Description: In AppDatabase._load_params, add logic to create a default params.json with minimal required fields if the file is missing.
+- WT017-001: Update State class attribute from name to state
+  - Type: Refactor
+  - Priority: Medium
+  - Status: Complete
+  - Description: Change State class attribute from 'name' to 'state' in mpo_model.py, update StateMachine to use 'state', and adjust validation to use sequence-based required states.
+- WT017-002: Enhance PanelManager for panel sequence validation
+  - Type: Enhancement
+  - Priority: Medium
+  - Status: Complete
+  - Description: Update db_manager.py to validate panel count against non-auto_trigger states for all panel sets on load, sort panels by panel_set, panel_seq, pgraph_seq, and add get_next_panel method.
+- WT017-003: Update AppController for panel sequence logic
+  - Type: Refactor
+  - Priority: Medium
+  - Status: Complete
+  - Description: Modify app_controller.py to initialize last_displayed_panel_seq to 0, replace get_panel_by_header with get_next_panel, and raise error if no panel found for state.
+- WT017-004: Test panel sequence and state transitions
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Add pytest tests to verify panel sequence selection (minimal panel_seq > last_displayed), state transitions, and error handling for missing panels in AppController and PanelManager.
+- WT018-001: Fix NaN display in panels
+  - Type: Bug Fix
+  - Priority: High
+  - Status: Complete
+  - Description: Update PanelManager.load_panels in db_manager.py to convert NaN values to None for verse and text fields when creating PanelPgraph objects to prevent "nan" from being displayed in the UI.
+- WT018-002: Test NaN handling in PanelManager
+  - Type: Testing
+  - Priority: Medium
+  - Status: Open
+  - Description: Add pytest tests to verify that NaN values in panels.csv are correctly converted to None in PanelManager.load_panels and do not appear in the UI output.
+- TD009 Move get_next_panel to PanelManager
+  - Type: Refactor
+  - Priority: Medium
+  - Status: Open
+  - Description: Move get_next_panel logic from AppController to PanelManager in db_manager.py for better encapsulation.
+- TD011 Validate category-prayer alignment
+  - Type: Enhancement
+  - Priority: Medium
+  - Status: Open
+  - Description: Add validation in CategoryManager.load_categories to ensure categories in categories.json align with prayers in prayers.csv.
+- TD012 Audit pickle file contents
+  - Type: Enhancement
+  - Priority: Low
+  - Status: Open
+  - Description: Add logging in AppDatabase.close to confirm Category_instances are saved to objects.pkl.
+- TD013 Add unit test for AppDatabase._validate_session
+  - Type: Enhancement
+  - Priority: Medium
+  - Status: Open
+  - Description: Add unit test in tests/ directory for AppDatabase._validate_session to verify session validation logic.
+- TD014 Review type annotations
+  - Type: Enhancement
+  - Priority: Low
+  - Status: Open
+  - Description: Audit type annotations in db_manager.py for consistent use of Optional where None is possible.
+- WT019-001: Fix categories pickle loading bug
+  - Type: Bug Fix
+  - Priority: Critical
+  - Status: Complete
+  - Description: Ensure Category_instances from pickle are preserved by skipping CategoryManager.load_categories if categories are loaded from pickle in AppDatabase.__init__.
