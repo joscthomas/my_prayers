@@ -45,6 +45,11 @@ class PersistenceManager:
                     if not hasattr(category, 'category') or not hasattr(category, 'category_weight'):
                         logging.error(f"Invalid Category object in pickle: {category}")
                         raise DatabaseError("Loaded Category object missing required attributes")
+                # Validate State_instances
+                for state in data.get('State_instances', []):
+                    if not isinstance(state, dict) or 'state' not in state or 'auto_trigger' not in state:
+                        logging.error(f"Invalid State object in pickle: {state}")
+                        raise DatabaseError("Loaded State object missing required fields")
                 return data
         except (pickle.UnpicklingError, EOFError) as e:
             logging.error(f"Failed to unpickle {self.pickle_file}: {e}")
@@ -62,6 +67,7 @@ class PersistenceManager:
 
     def load_json(self, file_path: str) -> Dict:
         """Load data from a JSON file."""
+        file_path = os.path.join(self.data_dir, file_path) if not os.path.isabs(file_path) else file_path
         try:
             if not os.path.exists(file_path):
                 raise DatabaseError(f"JSON file {file_path} not found")
@@ -73,6 +79,7 @@ class PersistenceManager:
 
     def save_json(self, file_path: str, data: Dict) -> None:
         """Save data to a JSON file."""
+        file_path = os.path.join(self.data_dir, file_path) if not os.path.isabs(file_path) else file_path
         try:
             os.makedirs(self.data_dir, exist_ok=True)
             with open(file_path, 'w', encoding='utf-8') as file:
@@ -83,6 +90,7 @@ class PersistenceManager:
 
     def load_csv(self, file_path: str) -> pd.DataFrame:
         """Load a CSV file into a pandas DataFrame."""
+        file_path = os.path.join(self.data_dir, file_path) if not os.path.isabs(file_path) else file_path
         try:
             df = pd.read_csv(file_path)
             df.replace(to_replace=[r"\\t|\\n|\\r", "\t|\n|\r"], value=["", ""], regex=True, inplace=True)
@@ -97,24 +105,29 @@ class PersistenceManager:
             raise DatabaseError(f"Failed to load CSV file: {e}")
 
     def load_states(self) -> List[Dict]:
-        """Load state transitions from states.json."""
+        """Load state transitions from states.json with validation."""
         try:
             data = self.load_json(self.states_file)
             if not isinstance(data, list):
                 raise DatabaseError("Invalid JSON format in states.json: Expected a list of states")
+            for state in data:
+                if not isinstance(state, dict) or 'state' not in state or 'auto_trigger' not in state:
+                    raise DatabaseError(f"Invalid state in states.json: {state}")
             return data
         except DatabaseError as e:
             logging.error(f"Failed to load states: {e}")
             raise
 
     def load_app_params(self) -> AppParams:
-        """Load application parameters from JSON."""
+        """Load application parameters from JSON, create default if missing."""
         try:
             params_data = self.load_json(self.params_file)
             return AppParams(**params_data)
         except DatabaseError as e:
-            logging.error(f"Failed to load parameters: {e}")
-            raise
+            logging.warning(f"params.json not found or invalid: {e}, creating default")
+            default_params = {"data_file_path": self.data_dir}
+            self.save_json(self.params_file, default_params)
+            return AppParams(**default_params)
 
 
 class PanelManager:
@@ -124,9 +137,9 @@ class PanelManager:
         self.persistence: PersistenceManager = persistence
         self.app_params: AppParams = app_database.app_params
         self.session: PrayerSession = app_database.session
+        self.state_data: List[Dict] = app_database.state_data
         self.panels: List[Panel] = []
-        states_data = self.persistence.load_states()
-        self.num_non_auto_trigger = len([s for s in states_data if not s.get('auto_trigger', False)])
+        self.num_non_auto_trigger = len([s for s in self.state_data if not s.get('auto_trigger', False)])
         logging.info(f"PanelManager initialized with num_non_auto_trigger: {self.num_non_auto_trigger}")
         logging.info(f"PanelManager initialized with last_panel_set: {self.session.last_panel_set}")
 
@@ -381,11 +394,13 @@ class AppDatabase:
         self.category_manager: CategoryManager = CategoryManager(self.persistence, self.prayer_manager)
         self.session: Optional[PrayerSession] = None
         self.panel_manager: Optional[PanelManager] = None
+        self.state_data: List[Dict] = []
 
         if os.path.exists(self.persistence.pickle_file):
             data = self.persistence.load_pickle()
             self.prayer_manager.prayers = data.get('Prayer_instances', [])
             self.category_manager.categories = data.get('Category_instances', [])
+            self.state_data = data.get('State_instances', [])
             sessions = data.get('Session_instances', [])
             self.session = sessions[-1] if sessions else PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)
             for prayer in self.prayer_manager.prayers:
@@ -396,11 +411,12 @@ class AppDatabase:
                 if not hasattr(category, 'category'):
                     logging.error(f"Invalid Category object missing category: {category}")
                     raise DatabaseError("Loaded Category object missing category attribute")
-            logging.info(f"Loaded {len(self.prayer_manager.prayers)} Prayer instances, {len(self.category_manager.categories)} Category instances")
+            logging.info(f"Loaded {len(self.prayer_manager.prayers)} Prayer instances, {len(self.category_manager.categories)} Category instances, {len(self.state_data)} State instances")
         else:
             self.session = PrayerSession(last_prayer_date=None, prayer_streak=0, last_panel_set=None)
             self.prayer_manager.load_prayers(prayers_file)
             self.category_manager.load_categories(categories_file)
+            self.state_data = self.persistence.load_states()
         self.panel_manager = PanelManager(self.persistence, self)
         self.panel_manager.load_panels(panels_file)
         logging.info(f"After initialization last_panel_set: {self.session.last_panel_set}")
@@ -428,10 +444,12 @@ class AppDatabase:
         self.session.last_prayer_date = date.today().strftime("%d-%b-%Y")
         self.session.prayer_streak = self.session.prayer_streak + 1 if self.session.prayer_streak else 1
         logging.info(f"Saving last_panel_set: {self.session.last_panel_set}")
+        logging.info(f"Saving {len(self.state_data)} State instances")
         objects_to_pickle = {
             'Prayer_instances': self.prayer_manager.prayers,
             'Category_instances': self.category_manager.categories,
-            'Session_instances': [self.session]
+            'Session_instances': [self.session],
+            'State_instances': self.state_data
         }
         self.persistence.save_pickle(objects_to_pickle)
 
